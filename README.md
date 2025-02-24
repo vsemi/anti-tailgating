@@ -54,8 +54,9 @@ Ideally, the device should be installed 2.5 to 3.5 meters above the ground, dire
 #### 3. Connect Self-powered USB hub to PC
 #### 3. Connect the people counting device to Self-powered USB
 #### 4. Wait for the 10 blinks of the green light on the device
-#### 5. Connect to IP address cat@10.42.0.1 (password is temppwd)
-Connect to ssh (For Windows PC, tool such as Putty or MobaXterm can be used) and connect to IP address cat@10.42.0.1 (password is temppwd)
+#### 5. Connect to device IP address cat@10.42.0.1 (user name: cat, password: temppwd)
+##### Linux: ssh cat@10.42.0.1
+##### Windows: tool such as Putty or MobaXterm can be used
 
 
 
