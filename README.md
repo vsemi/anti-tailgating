@@ -57,16 +57,24 @@ Ideally, the device should be installed 2.5 to 3.5 meters above the ground, dire
 #### 3. Connect the people counting device to Self-powered USB
 #### 4. Wait for the 10 blinks of the green light on the device
 #### 5. Connect to device IP address cat@10.42.0.1 (user name: cat, password: temppwd)
-##### Linux: ssh cat@10.42.0.1
+##### Linux: 
+```
+ssh cat@10.42.0.1
+```
 ##### Windows: tool such as Putty or MobaXterm can be used
 
 ![Web UI](console.png)
 
 ## Connect to wifi
 
-#### Run command: sudo nmcli d wifi list
-#### Find the WIFI name that is desired,
-#### sudo nmcli d wifi connect <WIFI_NAME> password <WIFI_PASSWORD>
+#### Run command: 
+```
+sudo nmcli d wifi list
+```
+#### Find the WIFI name that is desired, replace your wifi name and password and run following command:
+```
+sudo nmcli d wifi connect <WIFI_NAME> password <WIFI_PASSWORD> 
+```
 
 ![Web UI](wifi.png)
 
