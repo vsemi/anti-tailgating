@@ -62,8 +62,13 @@ Ideally, the device should be installed 2.5 to 3.5 meters above the ground, dire
 
 ![Web UI](console.png)
 
-## Connect to device console
+## Connect to wifi
 
+#### Run command: sudo nmcli d wifi list
+#### Find the WIFI name that is desired,
+#### sudo nmcli d wifi connect <WIFI_NAME> password <WIFI_PASSWORD>
+
+![Web UI](wifi.png)
 
 
 
