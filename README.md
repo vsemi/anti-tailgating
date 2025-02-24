@@ -60,6 +60,8 @@ Ideally, the device should be installed 2.5 to 3.5 meters above the ground, dire
 ##### Linux: ssh cat@10.42.0.1
 ##### Windows: tool such as Putty or MobaXterm can be used
 
+![Web UI](console.png)
+
 ## Connect to device console
 
 
