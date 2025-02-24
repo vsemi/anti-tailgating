@@ -27,9 +27,9 @@ Ideally, the device should be installed 2.5 to 3.5 meters above the ground, dire
 
 #### Relay is low-effective:
 
-##### 1: 0 person
-##### 2: 1 person
-##### 3: 2 person
+##### 1: zero person
+##### 2: one person
+##### 3: two persons
 ##### 4: suspicous
 
 # View depth image and review boundary
@@ -38,7 +38,7 @@ Ideally, the device should be installed 2.5 to 3.5 meters above the ground, dire
 #### 2. Power on the Self-powered USB hub
 #### 3. Connect Self-powered USB hub to PC
 #### 3. Connect the people counting device to Self-powered USB
-#### 4. Wait for the 10 blink of the green light on the device
+#### 4. Wait for the 10 blinks of the green light on the device
 #### 5. Launch web browser and enter http://10.42.0.1:8800 in the browser address bar
 
 ![Web UI](view.png)
