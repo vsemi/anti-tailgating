@@ -9,17 +9,19 @@
 #### USB Type-A to USB Type-C cable
 #### WiFi connection
 
+### Very important: 
+
+#### 1. the device should be firmed installed and facing down straight, loosing or shaking will seriously impact the accuracy of detection. 
+#### 2. Power off at least 10 seconds and power on again to reboot the device after every time adjusted installation
+#### 3. make sure there is no person or any non-fixed objects in the FOV area, ie ladders, stools, boxes etc, before powering on the device.
+
 # Installing Device
 
 Ideally, the device should be installed 2.5 to 3.5 meters above the ground, directly above the entrance, and facing down. Refer to below image for device field of view.
 
-#### Very important: the device should be firmed installed and facing down, loosing or shaking will seriously impact the accuracy of detection. Power off at least 10 seconds and on power to reboot the device after every time after installation adjustment, and make sure there is no person or any non-fixed objects in the FOV area, ie ladders, stools, boxes etc, before powering on the device.
-
 ![Web UI](install.png)
 
 # Quick Start
-
-### Very important: make sure there is no person or any non-fixed objects in the FOV area, ie ladders, stools, boxes etc, before powering on the device.
 
 #### 1. Connect the people counting device to 5V USB Type-C power adaptor, and power on
 #### 2. Wait for the 10 blinks of the green light on the device
