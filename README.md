@@ -49,6 +49,8 @@ Ideally, the device should be installed 2.5 to 3.5 meters above the ground, dire
 
 # Software Update
 
+## Connect to device console
+
 #### 1. Power on PC
 #### 2. Power on the Self-powered USB hub
 #### 3. Connect Self-powered USB hub to PC
@@ -57,6 +59,9 @@ Ideally, the device should be installed 2.5 to 3.5 meters above the ground, dire
 #### 5. Connect to device IP address cat@10.42.0.1 (user name: cat, password: temppwd)
 ##### Linux: ssh cat@10.42.0.1
 ##### Windows: tool such as Putty or MobaXterm can be used
+
+## Connect to device console
+
 
 
 
