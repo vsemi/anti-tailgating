@@ -9,7 +9,7 @@
 #### USB Type-A to USB Type-C cable
 #### WiFi connection
 
-### Very important: 
+# Very important: 
 
 #### 1. the device should be firmed installed and facing down straight, loosing or shaking will seriously impact the accuracy of detection. 
 #### 2. Power off at least 10 seconds and power on again to reboot the device after every time adjusted installation
