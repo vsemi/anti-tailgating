@@ -27,14 +27,14 @@ Ideally, the device should be installed 2.5 to 3.5 meters above the ground, dire
 
 #### Relay is low-effective
 
-#####   (Black):  GND
+#####   ($${\color{red}Black}$$):<pre>  GND</pre>
 
-##### 1 (Blue):   zero person
-##### 2 (Green):  one person
-##### 3 (Yellow): two persons
-##### 4 (White):  suspicious
+##### 1 ($${\color{blue}Blue}$$):<pre>   zero person</pre>
+##### 2 ($${\color{green}Green}$$):<pre>  one person</pre>
+##### 3 ($${\color{yellow}Yellow}$$):<pre> two persons</pre>
+##### 4 ($${\color{white}White}$$):<pre>  suspicious</pre>
 
-#####   ($${\color{red}Red}$$):    +5V
+#####   ($${\color{red}Red}$$):<pre>    +5V</pre>
 
 # View depth image and review boundary
 
