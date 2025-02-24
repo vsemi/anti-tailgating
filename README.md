@@ -13,7 +13,8 @@
 
 #### 1. the device should be firmed installed and facing down straight, loosing or shaking will seriously impact the accuracy of detection
 #### 2. Power off at least 10 seconds and power on again to reboot the device after every time adjusted installation
-#### 3. make sure there is no person or any non-fixed objects in the FOV area, ie ladders, stools, boxes etc, before powering on the device. If there are doors at the edge of FOV, close all of the doors before powering on the device
+#### 3. make sure there is no person or any non-fixed objects in the FOV area, ie ladders, stools, boxes etc, before powering on the device
+#### 4. If there are doors possibley in the FOV, close all of the doors before powering on the device
 
 # Installing Device
 
@@ -24,7 +25,7 @@ Ideally, the device should be installed 2.5 to 3.5 meters above the ground, dire
 # Quick Start
 
 #### 1. Connect the people counting device to 5V USB Type-C power adaptor
-#### 2. Wait for the 10 fast blinks of the green light and the yellow light start to blink every sbout 3 seconds
+#### 2. Wait for the 10 fast blinks of the green light and the yellow light start to blink about every 3 seconds
 #### 3. Device is ready
 
 # Relay
@@ -48,7 +49,7 @@ Ideally, the device should be installed 2.5 to 3.5 meters above the ground, dire
 #### 2. Power on the Self-powered USB hub
 #### 3. Connect Self-powered USB hub to PC
 #### 3. Connect the people counting device to Self-powered USB
-#### 4. Wait for the 10 fast blinks of the green light and the yellow light start to blink every sbout 3 seconds
+#### 4. Wait for the 10 fast blinks of the green light and the yellow light start to blink about every 3 seconds
 #### 5. Launch web browser and enter http://10.42.0.1:8800 in the browser address bar
 
 ![Web UI](view.png)
@@ -63,7 +64,7 @@ Ideally, the device should be installed 2.5 to 3.5 meters above the ground, dire
 #### 2. Power on the Self-powered USB hub
 #### 3. Connect Self-powered USB hub to PC
 #### 3. Connect the people counting device to Self-powered USB
-#### 4. Wait for the 10 fast blinks of the green light and the yellow light start to blink every sbout 3 seconds
+#### 4. Wait for the 10 fast blinks of the green light and the yellow light start to blink about every 3 seconds
 #### 5. Connect to device IP address cat@10.42.0.1 (user name: cat, password: temppwd)
 ##### Linux: 
 ```
