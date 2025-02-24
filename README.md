@@ -10,3 +10,5 @@
 #### WiFi connection
 
 # Installing Device
+
+![Web UI](install.png)
