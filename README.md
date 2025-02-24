@@ -13,6 +13,8 @@
 
 Ideally, the device should be installed 2.5 to 3.5 meters above the ground, directly above the entrance. Refer to below image for device field of view.
 
+### Very important: the device should be firmed installed, loosing or shaking will seriously impact the accuracy of detection. Power off at least 10 seconds and on power to reboot the device after every time after installation adjustment, and make sure there is no person or any non-fixed objects in the FOV area, ie ladders, stools, boxes etc, before powering on the device.
+
 ![Web UI](install.png)
 
 # Quick Start
