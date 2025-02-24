@@ -8,3 +8,5 @@
 #### Powered USB hub
 #### USB Type-A to USB Type-C cable
 #### WiFi connection
+
+# Installing Device
