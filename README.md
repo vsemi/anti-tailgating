@@ -34,7 +34,7 @@ Ideally, the device should be installed 2.5 to 3.5 meters above the ground, dire
 ##### 3 (Yellow): two persons
 ##### 4 (White):  suspicious
 
-#####   ($${\color{red}Red}$$):    +5V
+#####   (Red):    +5V
 
 # View depth image and review boundary
 
