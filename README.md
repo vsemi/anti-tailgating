@@ -1,6 +1,6 @@
 # List of Components and Tools:
 
-    # 5V USB Type-C power adaptor
+    #5V USB Type-C power adaptor
 
 ### Optional:
     #Personal computer
