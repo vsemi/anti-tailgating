@@ -38,6 +38,8 @@ Ideally, the device should be installed 2.5 to 3.5 meters above the ground, dire
 
 # View depth image and review boundary
 
+### Very important: USB cable to be used in following steps, needs to be a high-quality Type-A to USB Type-C cable. Some Type-C cables for phone charger, will not work.
+
 #### 1. Power on PC
 #### 2. Power on the Self-powered USB hub
 #### 3. Connect Self-powered USB hub to PC
@@ -50,6 +52,8 @@ Ideally, the device should be installed 2.5 to 3.5 meters above the ground, dire
 # Software Update
 
 ## Connect to device console
+
+### Very important: USB cable to be used in following steps, needs to be a high-quality Type-A to USB Type-C cable. Some Type-C cables for phone charger, will not work.
 
 #### 1. Power on PC
 #### 2. Power on the Self-powered USB hub
