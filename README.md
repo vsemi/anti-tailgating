@@ -16,6 +16,8 @@
 #### 3. make sure there is no person or any non-fixed objects in the FOV area, ie ladders, stools, boxes etc, before powering on the device
 #### 4. If there are doors possibley in the FOV, close all of the doors before powering on the device
 
+#### 5. USB cable to be used in this instruction, needs to be high-quality Type-A to USB Type-C cable. Some Type-C cables for phone charger, will not work.
+
 # Installing Device
 
 Ideally, the device should be installed 2.5 to 3.5 meters above the ground, directly above the entrance, and facing down. Refer to below image for device field of view.
@@ -43,8 +45,6 @@ Ideally, the device should be installed 2.5 to 3.5 meters above the ground, dire
 
 # View depth image and review boundary
 
-### Very important: USB cable to be used in following steps, needs to be a high-quality Type-A to USB Type-C cable. Some Type-C cables for phone charger, will not work.
-
 #### 1. Power on PC
 #### 2. Power on the Self-powered USB hub
 #### 3. Connect Self-powered USB hub to PC
@@ -57,8 +57,6 @@ Ideally, the device should be installed 2.5 to 3.5 meters above the ground, dire
 # Software Update
 
 ## Connect to device console
-
-### Very important: USB cable to be used in following steps, needs to be a high-quality Type-A to USB Type-C cable. Some Type-C cables for phone charger, will not work.
 
 #### 1. Power on PC
 #### 2. Power on the Self-powered USB hub
