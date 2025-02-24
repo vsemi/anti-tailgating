@@ -70,7 +70,20 @@ Ideally, the device should be installed 2.5 to 3.5 meters above the ground, dire
 
 ![Web UI](wifi.png)
 
+## Update Software
 
+#### Run command: 
 
+```
+cd ~/anti-tailgating
+git pull
+cd build
+make
+exit
+```
+
+![Web UI](update.png)
+
+#### Power down and up to reboot the device
 
 
