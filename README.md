@@ -46,3 +46,18 @@ Ideally, the device should be installed 2.5 to 3.5 meters above the ground, dire
 #### 5. Launch web browser and enter http://10.42.0.1:8800 in the browser address bar
 
 ![Web UI](view.png)
+
+# Software Update
+
+#### 1. Power on PC
+#### 2. Power on the Self-powered USB hub
+#### 3. Connect Self-powered USB hub to PC
+#### 3. Connect the people counting device to Self-powered USB
+#### 4. Wait for the 10 blinks of the green light on the device
+#### 5. Connect to IP address cat@10.42.0.1 (password is temppwd)
+Connect to ssh (For Windows PC, tool such as Putty or MobaXterm can be used) and connect to IP address cat@10.42.0.1 (password is temppwd)
+
+
+
+
+
