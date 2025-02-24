@@ -17,7 +17,7 @@ Ideally, the device should be installed 2.5 to 3.5 meters above the ground, dire
 
 # Quick Start
 
-### Very important: make sure there is no person or any non-fixed objects in the FOV area, ie ladders, stools, boxes etd, before powering on the device.
+### Very important: make sure there is no person or any non-fixed objects in the FOV area, ie ladders, stools, boxes etc, before powering on the device.
 
 #### 1. Connect the people counting device to 5V USB Type-C power adaptor, and power on
 #### 2. Wait for the 10 blinks of the green light on the device
