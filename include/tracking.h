@@ -16,7 +16,7 @@ static int next_object_id = 0;
 const float PART_MIN_SIZE = 0.05;
 const float PART_MIN_SIZE_Y = 0.05;
 
-const float OBJECT_VALID_SIZE = 0.2;
+const float OBJECT_VALID_SIZE = 0.085;
 
 const float OBJECT_MIN_SIZE = 0.12;
 const float OBJECT_MIN_SIZE_Y = 0.05;

@@ -93,6 +93,8 @@ char const *RELAY_1 = "35";
 char const *RELAY_2 = "36";
 char const *RELAY_S = "37";
 
+bool wakeUp = false;
+
 bool gpio_available = false;
 
 std::string otg_ip_address = "10.42.0.1";//"10.10.31.191";
@@ -165,8 +167,11 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_test_2(new pcl::PointCloud<pcl::Poi
 int test_index = 0;
 
 int detected_prev = -2;
+int is_awake = false;
+
 int ping_count = 0;
 bool led_green_on = false;
+int in = 0, out = 0;
 void process(Camera* camera)
 {
 	ErrorNumber_e status;
@@ -185,6 +190,8 @@ void process(Camera* camera)
 	st_time = std::chrono::steady_clock::now();
 	int data_frame_id = 0;
 
+	std::vector<SpatialObject> tracked_objects;
+	
 	while (! exit_requested)
 	{
 		try
@@ -204,16 +211,10 @@ void process(Camera* camera)
 				{
 					std::cout << "Training in progress: " << data_frame_id << "%, please wait ..." << std::endl;
 
-					if (gpio_available)
-					{
-						gpio_high(LED_RED);
-					}
+					if (gpio_available) gpio_high(LED_RED);
 				} else
 				{
-					if (gpio_available)
-					{
-						gpio_low(LED_RED);
-					}
+					if (gpio_available) gpio_low(LED_RED);
 				}
 				if (data_frame_id > 50)
 				{
@@ -234,10 +235,7 @@ void process(Camera* camera)
 						action = (char*)"record";
 						title = " Recording";
 					}
-					if (gpio_available)
-					{
-						gpio_high(LED_RED);
-					}
+					if (gpio_available) gpio_high(LED_RED);
 				}
 			}			
 			else
@@ -286,6 +284,33 @@ void process(Camera* camera)
 				std::vector<SpatialObject> parts_validated;
 				int detected = detect(cloud, parts_validated);
 
+				pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_pre_clustered(new pcl::PointCloud<pcl::PointXYZRGB>);
+				pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_clustered(new pcl::PointCloud<pcl::PointXYZRGB>);
+				pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_detected(new pcl::PointCloud<pcl::PointXYZRGB>);
+				pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_centers(new pcl::PointCloud<pcl::PointXYZRGB>);
+				pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_debug(new pcl::PointCloud<pcl::PointXYZRGB>);
+
+				detected = track(parts_validated, out, in, cloud_clustered, cloud_detected, cloud_centers, cloud_debug, tracked_objects);
+				if (tracked_objects.size() == 1)
+				{
+					if (tracked_objects[0].is_at_edge) detected = 0;
+				} else if (tracked_objects.size() > 1)
+				{
+					bool one_in_center = false;
+					for (int i = 0; i < tracked_objects.size(); i ++)
+					{
+						// at least one is in center area
+						if (! tracked_objects[i].is_at_edge) {
+							one_in_center = true;
+							break;
+						}
+					}
+					if (! one_in_center)
+					{
+						detected = 0;
+					}
+				}
+
 				/////////////////////////////////////////////
 				if (detected > 0 && ping_count%2 == 0)
 				{
@@ -329,40 +354,73 @@ void process(Camera* camera)
 
 				if (strcmp(comm_protocal, "relay") == 0)
 				{
+					// wake up 
+					// is_awake
+					// wakeUp
+					if (wakeUp)
+					{
+						//wake up check
+						if (cloud.cloud->points.size() > 30)
+						{
+							if (! is_awake)
+							{
+								is_awake = true;
+								if (gpio_available) gpio_low(RELAY_0); 
+								std::cout << "======> power relay -> wakeup ON" << std::endl;
+							}
+						} else 
+						{
+							if (is_awake)
+							{
+								is_awake = false;
+								if (gpio_available) gpio_high(RELAY_0); 
+								std::cout << "======> power relay -> wakeup OFF" << std::endl;
+							}							
+						}
+					}
 					if (detected_prev != detected)
 					{
-						//if (tracked > 0) 
-							std::cout << "======> power relay -> detected: " << detected << " detected_prev: " << detected_prev << std::endl;
-					
-						if (gpio_available)
-						{
 							//gpio_high //gpio_low                                                
-							if (detected_prev == 0) {
-									gpio_high(RELAY_0);
-							}
-							if (detected_prev == 1) {
-									gpio_high(RELAY_1);
-							}
-							if (detected_prev >= 2) {
-									gpio_high(RELAY_2);
-							}
-							if (detected_prev == -1) {
-									gpio_high(RELAY_S);
-							}
+						if (detected_prev == 0) {
+								if (! wakeUp) 
+								{
+									if (gpio_available) gpio_high(RELAY_0);
+									std::cout << "======> power relay -> 0 OFF" << std::endl;
+								}
+						}
+						if (detected_prev == 1) {
+								if (gpio_available) gpio_high(RELAY_1);
+								std::cout << "======> power relay -> 1 OFF" << std::endl;
+						}
+						if (detected_prev >= 2) {
+								if (gpio_available) gpio_high(RELAY_2);
+								std::cout << "======> power relay -> 2 OFF" << std::endl;
+						}
+						if (detected_prev == -1) {
+								if (gpio_available) gpio_high(RELAY_S);
+								std::cout << "======> power relay -> S OFF" << std::endl;
+						}
 
-							if (detected == 0) {
-								gpio_low(RELAY_0); 
-							}
-							if (detected == 1) {
-								gpio_low(RELAY_1);
-							} 
-							if (detected >= 2) {
-								gpio_low(RELAY_2);
-							} 
-							if (detected == -1) {
-								gpio_low(RELAY_S);
+						if (detected == 0) {
+							if (! wakeUp) 
+							{
+								if (gpio_available) gpio_low(RELAY_0); 
+								std::cout << "======> power relay -> 0 ON" << std::endl;
 							}
 						}
+						if (detected == 1) {
+							if (gpio_available) gpio_low(RELAY_1);
+							std::cout << "======> power relay -> 1 ON" << std::endl;
+						} 
+						if (detected >= 2) {
+							if (gpio_available) gpio_low(RELAY_2);
+							std::cout << "======> power relay -> 2 ON" << std::endl;
+						} 
+						if (detected == -1) {
+							if (gpio_available) gpio_low(RELAY_S);
+							std::cout << "======> power relay -> S ON" << std::endl;
+						}
+
 						detected_prev = detected;
 					}
 				}
@@ -694,13 +752,35 @@ int main(int argc, char** argv) {
 	sigIntHandler.sa_flags = 0;
 	sigaction(SIGINT, &sigIntHandler, NULL);
 
-	bool _dev = true;
-	std::string test_data_path = "/home/vsemi/dev/anti_tailgating/test/";
+	data_background = new float[9600];
 
+	std::string test_data_path = "/home/vsemi/dev/anti_tailgating/test/";
 	if (file_exists("/home/cat"))
 	{
 		test_data_path = "/home/cat/anti_tailgating/test/";
+		gpio_available = true;
+		otg_ip_address = "10.42.0.1";
+	} else 
+	{
+		sd_card = (char*) "/home/vsemi/data/peoplecount/test";
+	}
 
+	if (argc >= 2)
+	{
+		action = argv[1];
+		std::cout << "Mode:            " << action << std::endl;
+	} else {
+		std::cout << "Usage: peoplecount [train-detect | view | test]"<< std::endl;
+		return 1;
+	}
+
+	if (argc >= 3 && strcmp(argv[2], "wake") == 0) 
+	{
+		wakeUp = true;
+	}
+
+	if (gpio_available)
+	{
 		gpio_init(LED_RED);
 		gpio_init(LED_GREEN);
 
@@ -716,35 +796,14 @@ int main(int argc, char** argv) {
 		gpio_high(RELAY_1);
 		gpio_high(RELAY_2);
 		gpio_high(RELAY_S);
-
-		gpio_available = true;
-
-		otg_ip_address = "10.42.0.1";
-
-		_dev = false;
 	}
 
-	data_background = new float[9600];
-
-	if (argc >= 2)
+	if (strcmp(action, "test") == 0)
 	{
-		action = argv[1];
-		std::cout << "Mode:            " << action << std::endl;
-
-		if (argc == 2 && strcmp(argv[1], "test") == 0)
-		{
-			read(test_data_path + "model.bin", data_background);
-			pcl::io::loadPCDFile<pcl::PointXYZRGB> (test_data_path + "0.pcd", *cloud_test_0);
-			pcl::io::loadPCDFile<pcl::PointXYZRGB> (test_data_path + "1.pcd", *cloud_test_1);
-			pcl::io::loadPCDFile<pcl::PointXYZRGB> (test_data_path + "2.pcd", *cloud_test_2);
-		}
-	} else {
-		std::cout << "Usage: peoplecount [train-detect | view | test]"<< std::endl;
-		return 1;
-	}
-	if (_dev)
-	{
-		sd_card = (char*) "/home/vsemi/data/peoplecount/test";
+		read(test_data_path + "model.bin", data_background);
+		pcl::io::loadPCDFile<pcl::PointXYZRGB> (test_data_path + "0.pcd", *cloud_test_0);
+		pcl::io::loadPCDFile<pcl::PointXYZRGB> (test_data_path + "1.pcd", *cloud_test_1);
+		pcl::io::loadPCDFile<pcl::PointXYZRGB> (test_data_path + "2.pcd", *cloud_test_2);
 	}
 
 	if (! file_exists(sd_card))
@@ -753,7 +812,7 @@ int main(int argc, char** argv) {
 		return 2;
 	}
 	
-	usleep(2000000);
+	usleep(1000000);
 	if (gpio_available)
 	{
 		gpio_low(LED_RED);
@@ -785,7 +844,7 @@ int main(int argc, char** argv) {
 			sensor_uid = camera->getID();
 		}
 	}
-	usleep(2000000);
+	usleep(1000000);
 	if (gpio_available)
 	{
 		gpio_low(LED_RED);
