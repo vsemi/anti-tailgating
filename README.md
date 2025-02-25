@@ -90,6 +90,7 @@ sudo nmcli d wifi connect <WIFI_NAME> password <WIFI_PASSWORD>
 #### Run command: 
 
 ```
+sudo systemctl stop peoplecount
 cd ~/anti-tailgating
 git pull
 cd build
