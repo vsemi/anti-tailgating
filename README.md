@@ -11,7 +11,7 @@
 
 # Very important: 
 
-#### 1. the device should be firmed installed and facing down straight, loosing or shaking will seriously impact the accuracy of detection
+#### 1. the device should be firmly installed and facing down straight, loosing or shaking will seriously impact the accuracy of detection
 #### 2. Power off at least 10 seconds and power on again to reboot the device after every time adjusted installation
 #### 3. make sure there is no person or any non-fixed objects in the FOV area, ie ladders, stools, boxes etc, before powering on the device
 #### 4. If there are doors possibley in the FOV, close all of the doors before powering on the device
