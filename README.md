@@ -14,7 +14,7 @@
 #### 1. the device should be firmly installed and facing down straight, loosing or shaking will seriously impact the accuracy of detection
 #### 2. Power off at least 10 seconds and power on again to reboot the device after every time adjusted installation
 #### 3. make sure there is no person or any non-fixed objects in the FOV area, ie ladders, stools, boxes etc, before powering on the device
-#### 4. If there are doors possibley in the FOV, close all of the doors before powering on the device
+#### 4. If there are doors possibley visible by the sensor, close all of the doors before powering on the device
 
 #### 5. USB cable to be used in this instruction, needs to be high-quality Type-A to Type-C cable. Some Type-C cables for phone charger, will not work.
 
