@@ -100,6 +100,6 @@ exit
 
 ![Web UI](update.png)
 
-#### Power down and connect the people counting device to 5V USB Type-C power adaptor
+#### Power down and connect the people counting device back to 5V USB Type-C power adaptor
 
 
