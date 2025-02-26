@@ -16,7 +16,7 @@
 #### 3. make sure there is no person or any non-fixed objects in the FOV area, ie ladders, stools, boxes etc, before powering on the device
 #### 4. If there are doors possibley visible by the sensor, close all of the doors before powering on the device
 
-#### 5. USB cable to be used in this instruction, needs to be high-quality Type-A to Type-C cable. Some Type-C cables for phone charger, will not work.
+#### 5. USB cable to be used in this instruction, needs to be high-quality Type-A to Type-C cable. Some low quality Type-C cables ie for phone charger, will not work for high speed data transition.
 
 # Installing Device
 
