@@ -45,6 +45,8 @@ Ideally, the device should be installed 2.5 to 3.5 meters above the ground, dire
 
 # View depth image and review boundary
 
+#### When the device is working on view mode, response will be slower than regular mode
+
 #### 1. Power on PC
 #### 2. Power on the Self-powered USB hub
 #### 3. Connect Self-powered USB hub to PC
