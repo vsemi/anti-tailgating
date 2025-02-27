@@ -83,7 +83,7 @@ bool is_stopped = false;
 cv::Mat depth_bgr(60, 160, CV_8UC3, cv::Scalar(0, 0, 0));
 cv::Mat_<cv::Point3f> point3f_mat_(60, 160);
 
-std::string title;
+std::string title = "People Counting";
 
 char const *LED_RED = "83";
 char const *LED_GREEN = "84";
@@ -204,7 +204,7 @@ void process(Camera* camera)
 				continue;
 			}
 
-			if (strcmp(action, "train") == 0 || strcmp(action, "train-detect") == 0 || strcmp(action, "train-record") == 0)
+			if (strcmp(action, "train") == 0 || strcmp(action, "train-detect") == 0 || strcmp(action, "train-record") == 0 || strcmp(action, "train-view") == 0)
 			{
 				train(tofImage.data_3d_xyz_rgb, data_background);
 				if (data_frame_id >= 5 && data_frame_id < 50 && data_frame_id % 5 == 0)
@@ -229,11 +229,12 @@ void process(Camera* camera)
 					} else if (strcmp(action, "train-detect") == 0)
 					{
 						action = (char*)"detect";
-						title = " Recording";
 					} else if (strcmp(action, "train-record") == 0)
 					{
 						action = (char*)"record";
-						title = " Recording";
+					} else if (strcmp(action, "train-view") == 0)
+					{
+						action = (char*)"view";
 					}
 					if (gpio_available) gpio_high(LED_RED);
 				}
@@ -245,8 +246,6 @@ void process(Camera* camera)
 				if (
 					strcmp(action, "detect") == 0 || 
 					strcmp(action, "record") == 0 || 
-					strcmp(action, "train-detect") == 0 || 
-					strcmp(action, "train-record") == 0 || 
 					strcmp(action, "view") == 0
 				)
 				{
@@ -311,7 +310,6 @@ void process(Camera* camera)
 					}
 				}
 
-				/////////////////////////////////////////////
 				if (detected > 0 && ping_count%2 == 0)
 				{
 					ping_count = 0;
@@ -346,7 +344,7 @@ void process(Camera* camera)
 								saturated_points ++;
 						}
 				}
-				//std::cout << "======> saturated_points: " << saturated_points << std::endl;
+				
 				if (saturated_points > 500)
 				{
 						detected = -1;
@@ -354,9 +352,6 @@ void process(Camera* camera)
 
 				if (strcmp(comm_protocal, "relay") == 0)
 				{
-					// wake up 
-					// is_awake
-					// wakeUp
 					if (wakeUp)
 					{
 						//wake up check
@@ -424,8 +419,7 @@ void process(Camera* camera)
 						detected_prev = detected;
 					}
 				}
-				/////////////////////////////////////////////
-
+				
 				if (strcmp(action, "record") == 0)
 				{
 					std::unique_lock<std::mutex> lock_queque_record(mutex_queque_record);
@@ -443,7 +437,8 @@ void process(Camera* camera)
 					}
 					lock_queque_record.unlock();
 				}
-				else if (strcmp(action, "view") == 0 || strcmp(action, "test") == 0)
+
+				if (strcmp(action, "view") == 0 || strcmp(action, "test") == 0)
 				{
 					depth_bgr = cv::Mat(tofImage.height, tofImage.width, CV_8UC3, tofImage.data_2d_bgr);
 
@@ -507,7 +502,9 @@ void process(Camera* camera)
 						{
 							exit_requested = true;
 						}
-					} else if (strcmp(action, "view") == 0)
+					}
+					
+					if (strcmp(action, "view") == 0)
 					{
 						streamer->write(depth_bgr_display);
 					}
@@ -770,7 +767,7 @@ int main(int argc, char** argv) {
 		action = argv[1];
 		std::cout << "Mode:            " << action << std::endl;
 	} else {
-		std::cout << "Usage: peoplecount [train-detect | view | test]"<< std::endl;
+		std::cout << "Usage: peoplecount [train-detect | train-record | train-view | test]"<< std::endl;
 		return 1;
 	}
 
@@ -861,10 +858,10 @@ int main(int argc, char** argv) {
 
 	if (otg_connected)
 	{
-		action = (char*)"view";
+		action = (char*)"train-view";
 	}
 
-	if (strcmp(action, "view") == 0)
+	if (strcmp(action, "view") == 0 || strcmp(action, "train-view") == 0)
 	{
 		streamer = new MJPGStreamer();
 		streamer->start(8800);
@@ -890,7 +887,7 @@ int main(int argc, char** argv) {
 	
 	start();
 
-	if (strcmp(action, "view") == 0)
+	if (strcmp(action, "view") == 0 || strcmp(action, "train-view") == 0)
 	{
 		std::cout << "To stop streamer ..." << std::endl;
 		streamer->stop();
