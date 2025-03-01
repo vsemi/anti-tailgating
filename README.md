@@ -113,6 +113,8 @@ exit
 #### Run command: 
 
 ```
+cd ~/
+
 sudo vi peoplecount_start.sh
 ```
 File peoplecount_start.sh openned for edit
@@ -130,7 +132,9 @@ Unplug the USB cable which connected to PC, and plug in 5V power adptor.
 
 Now the device in Data Recording mode
 
-After data recorded, follow step of "Modify startup script" to change the startup script back to:
+The device started recording data when there is person(s) in the FOV.
+
+After data recorded, follow step above of "Modify startup script" to change the startup script back to:
 
 ```
 sudo /home/cat/anti_tailgating/build/peoplecount train-detect
@@ -139,6 +143,8 @@ sudo /home/cat/anti_tailgating/build/peoplecount train-detect
 ## Retrieve recorded data
 
 ```
+cd ~/
+
 tar -czvf data.tar.gz data
 
 scp data.tar.gz ./
