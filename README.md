@@ -108,33 +108,6 @@ exit
 
 ## Connect to device console
 
-#### 1. Power on PC
-#### 2. Power on the Self-powered USB hub
-#### 3. Connect Self-powered USB hub to PC
-#### 3. Connect the people counting device to Self-powered USB
-#### 4. Wait for the yellow light start to blink about every 3 seconds
-#### 5. Connect to device IP address cat@10.42.0.1 (user name: cat, password: temppwd)
-##### Linux: 
-```
-ssh cat@10.42.0.1
-```
-##### Windows: tool such as Putty or MobaXterm can be used
-
-![Web UI](console.png)
-
-## Connect to wifi (if wifi already configured previously, skip this step)
-
-#### Run command: 
-```
-sudo nmcli d wifi list
-```
-#### Find the WIFI name that is desired, replace your wifi name and password and run following command:
-```
-sudo nmcli d wifi connect <WIFI_NAME> password <WIFI_PASSWORD> 
-```
-
-![Web UI](wifi.png)
-
 ## Modify startup script
 
 #### Run command: 
@@ -152,10 +125,7 @@ change to:
 ```
 sudo /home/cat/anti_tailgating/build/peoplecount train-record
 ```
-Shurdown the device
-```
-ssudo shutdown -h now
-```
+
 Unplug the USB cable which connected to PC, and plug in 5V power adptor.
 
 Now the device in Data Recording mode
@@ -164,4 +134,11 @@ After data recorded, follow step of "Modify startup script" to change the startu
 
 ```
 sudo /home/cat/anti_tailgating/build/peoplecount train-detect
+```
+
+## Retrieve recorded data
+
+```
+tar cvf data.tar data
+scp data.tar ./
 ```
