@@ -139,6 +139,7 @@ sudo /home/cat/anti_tailgating/build/peoplecount train-detect
 ## Retrieve recorded data
 
 ```
-tar cvf data.tar data
-scp data.tar ./
+tar -czvf data.tar.gz data
+
+scp data.tar.gz ./
 ```
