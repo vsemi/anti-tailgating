@@ -113,6 +113,8 @@ exit
 #### Run command: 
 
 ```
+sudo systemctl stop peoplecount
+
 cd ~/
 
 sudo vi peoplecount_start.sh
@@ -143,6 +145,8 @@ sudo /home/cat/anti_tailgating/build/peoplecount train-detect
 ## Retrieve recorded data
 
 ```
+sudo systemctl stop peoplecount
+
 cd ~/
 
 tar -czvf data.tar.gz data
