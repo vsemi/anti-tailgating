@@ -150,8 +150,6 @@ Unplug the USB cable which connected to PC, and plug in 5V power adptor.
 
 Now the device in Data Recording mode
 
-The device started recording data when there is person(s) in the FOV.
-
 ### Very important: 
 
 #### 1. after data recorded, wait at least 5 minutes before unpluging the power adptor, otherwise the data might not be sync properly to the SD card and the data might be corrupted!
