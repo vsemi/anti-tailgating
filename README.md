@@ -87,6 +87,14 @@ sudo nmcli d wifi connect <WIFI_NAME> password <WIFI_PASSWORD>
 
 ![Web UI](wifi.png)
 
+After wifi connected, the device should have an IP address besides the 127.0.0.1 and 10.42.0.1:
+
+![Web UI](ip_address.png)
+
+In the screenshot above, additional IP address obtained. 
+
+### you may use this wifi IP address to connect to the device console when the device installed on the ceiling.
+
 ## Update Software
 
 #### Run command: 
