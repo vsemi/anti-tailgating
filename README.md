@@ -144,12 +144,20 @@ sudo /home/cat/anti_tailgating/build/peoplecount train-detect
 
 ## Retrieve recorded data
 
+### Login into the device and run command:
+
 ```
 sudo systemctl stop peoplecount
 
 cd ~/
 
 tar -czvf data.tar.gz data
-
+```
+### Download data (Linux):
+```
 scp cat@10.42.0.1:~/data.tar.gz ./
+```
+### Download data (Windows):
+```
+pscp username_linux_machine@ip_of_linux_machine:/home/ubuntu/myfile.ext C:\Users\Name\Downloads
 ```
