@@ -91,6 +91,10 @@ sudo nmcli d wifi connect <WIFI_NAME> password <WIFI_PASSWORD>
 
 After wifi connected, the device should have an IP address besides the 127.0.0.1 and 10.42.0.1:
 
+```
+ifconfig 
+```
+
 ![Web UI](ip_address.png)
 
 In the screenshot above, additional IP address (10.0.0.223) obtained. 
