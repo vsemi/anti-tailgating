@@ -151,5 +151,5 @@ cd ~/
 
 tar -czvf data.tar.gz data
 
-scp data.tar.gz ./
+scp cat@10.42.0.1:~/data.tar.gz ./
 ```
