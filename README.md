@@ -148,11 +148,11 @@ sudo /home/cat/anti_tailgating/build/peoplecount train-record
 
 Unplug the USB cable which connected to PC, and plug in 5V power adptor.
 
-Now the device in Data Recording mode
+Now the device is in Data Recording mode
 
 ### Very important: 
 
-#### 1. after data recorded, wait at least 5 minutes before unpluging the power adptor, otherwise the data might not be sync properly to the SD card and the data might be corrupted!
+#### 1. after data recorded, wait for at least 5 minutes before unpluging the power adptor, otherwise the data might not be sync properly to the SD card and the recorded data might be corrupted!
 
 #### 2. after data recorded, follow step above of "Modify startup script" to change the startup script back to:
 
