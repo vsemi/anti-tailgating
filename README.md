@@ -91,13 +91,15 @@ After wifi connected, the device should have an IP address besides the 127.0.0.1
 
 ![Web UI](ip_address.png)
 
-In the screenshot above, additional IP address obtained. 
+In the screenshot above, additional IP address (10.0.0.223) obtained. 
 
 ### you may use this wifi IP address to connect to the device console when the device installed on the ceiling.
 
 ## Update Software
 
-#### Run command: 
+### Connect to device console
+
+### Run command: 
 
 ```
 sudo systemctl stop peoplecount
@@ -112,11 +114,11 @@ exit
 
 #### Power down and connect the people counting device back to 5V USB Type-C power adaptor
 
-# Record Data
+## Record Data
 
-## Connect to device console
+### Connect to device console
 
-## Modify startup script
+### Modify startup script
 
 #### Run command: 
 
@@ -144,11 +146,11 @@ Now the device in Data Recording mode
 
 The device started recording data when there is person(s) in the FOV.
 
-## Very important: 
+### Very important: 
 
-### 1. after data recorded, wait at least 5 minutes before unpluging the power adptor, otherwise the data might not be sync properly to the SD card and the data might be corrupted!
+#### 1. after data recorded, wait at least 5 minutes before unpluging the power adptor, otherwise the data might not be sync properly to the SD card and the data might be corrupted!
 
-### 2. after data recorded, follow step above of "Modify startup script" to change the startup script back to:
+#### 2. after data recorded, follow step above of "Modify startup script" to change the startup script back to:
 
 ```
 sudo /home/cat/anti_tailgating/build/peoplecount train-detect
