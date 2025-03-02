@@ -159,5 +159,5 @@ scp cat@10.42.0.1:~/data.tar.gz ./
 ```
 ### Download data (Windows):
 ```
-pscp username_linux_machine@ip_of_linux_machine:/home/ubuntu/myfile.ext C:\Users\Name\Downloads
+pscp cat@10.42.0.1:~/data.tar.gz C:\
 ```
