@@ -70,7 +70,7 @@ Ideally, the device should be installed 2.5 to 3.5 meters above the ground, dire
 ```
 ssh cat@10.42.0.1
 ```
-##### Windows: download and install Putty from here: [Download Putty](https://www.putty.org/)
+##### Windows: download and install Putty from here: [Download Putty](https://www.putty.org/) and connect to the IP address (10.42.0.1) 
 
 ![Web UI](console.png)
 
@@ -97,9 +97,9 @@ In the screenshot above, additional IP address (10.0.0.223) obtained.
 
 ## Update Software
 
-### Connect to device console
+### 1. Connect to device console
 
-### Run command: 
+### 2. Run command: 
 
 ```
 sudo systemctl stop peoplecount
@@ -116,9 +116,9 @@ exit
 
 ## Record Data
 
-### Connect to device console
+### 1. Connect to device console
 
-### Modify startup script
+### 2. Modify startup script
 
 #### Run command: 
 
@@ -158,7 +158,7 @@ sudo /home/cat/anti_tailgating/build/peoplecount train-detect
 
 ## Retrieve recorded data
 
-### Login into the device and run command:
+### 1. Login into the device console and run command:
 
 ```
 sudo systemctl stop peoplecount
@@ -167,11 +167,13 @@ cd ~/
 
 tar -czvf data.tar.gz data
 ```
-### Download data (Linux):
+### 2. Download data (Linux):
+
+#### Linux:
 ```
 scp cat@10.42.0.1:~/data.tar.gz ./
 ```
-### Download data (Windows):
+#### Windows:
 ```
 pscp cat@10.42.0.1:~/data.tar.gz C:\
 ```
