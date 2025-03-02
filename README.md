@@ -70,7 +70,7 @@ Ideally, the device should be installed 2.5 to 3.5 meters above the ground, dire
 ```
 ssh cat@10.42.0.1
 ```
-##### Windows: tool such as Putty or MobaXterm can be used
+##### Windows: download and install Putty from here: ![Download Putty](https://www.putty.org/)
 
 ![Web UI](console.png)
 
