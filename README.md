@@ -70,7 +70,9 @@ Ideally, the device should be installed 2.5 to 3.5 meters above the ground, dire
 ```
 ssh cat@10.42.0.1
 ```
-##### Windows: download and install Putty from here: [Download Putty](https://www.putty.org/) and connect to the IP address (10.42.0.1) 
+##### Windows: 
+
+download and install Putty from here: [Download Putty](https://www.putty.org/) and connect to the IP address (10.42.0.1) 
 
 ![Web UI](console.png)
 
