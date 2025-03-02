@@ -136,7 +136,11 @@ Now the device in Data Recording mode
 
 The device started recording data when there is person(s) in the FOV.
 
-After data recorded, follow step above of "Modify startup script" to change the startup script back to:
+## Very important: 
+
+### 1. after data recorded, wait at least 5 minutes before unpluging the power adptor, otherwise the data might not be sync properly to the SD card and the data might be corrupted!
+
+### 2. after data recorded, follow step above of "Modify startup script" to change the startup script back to:
 
 ```
 sudo /home/cat/anti_tailgating/build/peoplecount train-detect
