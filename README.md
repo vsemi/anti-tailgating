@@ -51,7 +51,7 @@ Ideally, the device should be installed 2.5 to 3.5 meters above the ground, dire
 #### 2. Power on the Self-powered USB hub
 #### 3. Connect Self-powered USB hub to PC
 #### 3. Connect the people counting device to self-powered USB hub
-#### 4. Wait for the yellow light start to blink about every 3 seconds
+#### 4. Wait for the 10 fast blinks of the green light and the yellow light start to blink about every 3 seconds
 #### 5. Launch web browser and enter http://10.42.0.1:8800 in the browser address bar
 
 ![Web UI](view.png)
@@ -64,15 +64,22 @@ Ideally, the device should be installed 2.5 to 3.5 meters above the ground, dire
 #### 2. Power on the Self-powered USB hub
 #### 3. Connect Self-powered USB hub to PC
 #### 3. Connect the people counting device to Self-powered USB
-#### 4. Wait for the yellow light start to blink about every 3 seconds
+#### 4. Wait for the 10 fast blinks of the green light and the yellow light start to blink about every 3 seconds
 #### 5. Connect to device IP address cat@10.42.0.1 (user name: cat, password: temppwd)
 ##### Linux: 
 ```
 ssh cat@10.42.0.1
 ```
+
+enter password: temppwd
+
 ##### Windows: 
 
-download and install Putty from here: [Download Putty](https://www.putty.org/) and connect to the IP address (10.42.0.1) 
+download and install Putty from here: [Download Putty](https://www.putty.org/) 
+
+connect to the IP address (10.42.0.1) 
+
+enter user name: cat, password: temppwd
 
 ![Web UI](console.png)
 
