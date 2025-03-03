@@ -99,7 +99,7 @@ ifconfig
 
 In the screenshot above, additional IP address (10.0.0.223) obtained. 
 
-#### you may then use this wifi IP address (to replace 10.42.0.1) to connect to the device console when the device installed on the ceiling, so that you do not need connect the device to your PC via an USB cable, for your convenience. 
+#### you may then use this wifi IP address (to replace 10.42.0.1) to connect to the device console for software update or data recording when the device installed on the ceiling, so that you do not need connect the device to your PC via an USB cable, for your convenience. 
 #### Please be aware of that, the wifi IP address is dynamic, possibly changed next time the device restarted, when that happened, you may still need to connect the device to your PC to figure out the new wifi IP address.
 
 ## Update Software
