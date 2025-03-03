@@ -126,7 +126,7 @@ exit
 
 ![Web UI](update.png)
 
-#### Power down and connect the people counting device back to 5V USB Type-C power adaptor
+#### Power down the device for at least 10 seconds before plug the device back to 5V USB Type-C power adaptor
 
 ## Record Data
 
@@ -160,7 +160,7 @@ Now the device is in Data Recording mode
 
 ### Very important: 
 
-#### 1. after data recorded, wait for at least 5 minutes before unpluging the power adptor, otherwise the data might not be sync properly to the SD card and the recorded data might be corrupted!
+#### 1. after data recorded, wait for at least 5 minutes before power down the device or unpluging the power adptor, otherwise the data might not be sync properly to the SD card and the recorded data might be corrupted!
 
 #### 2. after data recorded, follow step above of "Modify startup script" to change the startup script back to:
 
