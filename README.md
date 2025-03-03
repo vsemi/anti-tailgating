@@ -36,7 +36,7 @@ Ideally, the device should be installed 2.5 to 3.5 meters above the ground, dire
 
 #####   (Black):  GND
 
-##### 1 (Blue):   zero person
+##### 1 (Blue):   zero person or wakeup signal
 ##### 2 (Green):  one person
 ##### 3 (Yellow): two persons
 ##### 4 (White):  suspicious
