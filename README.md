@@ -117,7 +117,7 @@ In the screenshot above, additional IP address (10.0.0.223) obtained.
 
 ```
 sudo systemctl stop peoplecount
-cd ~/anti-tailgating
+cd ~/anti_tailgating
 git pull
 cd build
 make
