@@ -34,14 +34,14 @@ Ideally, the device should be installed 2.5 to 3.5 meters above the ground, dire
 
 #### Relay is low-effective
 
-#####   (Black):  GND
+##### Pin 1:  GND
 
-##### 1 (Blue):   zero person or wakeup signal
-##### 2 (Green):  one person
-##### 3 (Yellow): two persons
-##### 4 (White):  suspicious
+##### Pin 2 (relay channel 1):  zero person or wakeup signal
+##### Pin 3 (relay channel 2):  one person
+##### Pin 4 (relay channel 3):  two persons
+##### Pin 5 (relay channel 4):  suspicious
 
-#####   (Red):    +5V
+##### Pin 6:  +5V
 
 # View depth image and review boundary
 
