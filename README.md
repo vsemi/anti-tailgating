@@ -27,11 +27,12 @@ Ideally, the device should be installed 2.5 to 3.5 meters above the ground, dire
 # Quick Start
 
 #### 1. Connect the people counting device to 5V USB Type-C power adaptor
-#### 2. Leds both Green and Yellow both on and off
-#### 3. Led green on and off
-#### 4. Led green blinks 10 times
-#### 5. Led yellow light blinks about every 3 seconds
+#### 2. Leds both green and yellow both on and off (initialization done)
+#### 3. Led green on and off (ToF checked)
+#### 4. Led green blinks 10 times (learning environment)
+#### 5. Led yellow blinks about every 3 seconds (heart beat)
 #### 6. Device is ready
+#### 7. Led yellow blinks fast when there is object in the scene
 
 # Relay
 
