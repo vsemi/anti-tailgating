@@ -27,21 +27,25 @@ Ideally, the device should be installed 2.5 to 3.5 meters above the ground, dire
 # Quick Start
 
 #### 1. Connect the people counting device to 5V USB Type-C power adaptor
-#### 2. Wait for the 10 fast blinks of the green light and the yellow light start to blink about every 3 seconds
-#### 3. Device is ready
+#### 2. Leds green and yellow both on and off (initialization done)
+#### 3. Led green on and off (ToF checked)
+#### 4. Led green blinks 10 times (learning environment)
+#### 5. Led yellow blinks about every 3 seconds (heart beat)
+#### 6. Device is ready
+#### 7. Led yellow blinks fast when there is object in the scene
 
 # Relay
 
 #### Relay is low-effective
 
-#####   (Black):  GND
+##### Pin 1:  GND
 
-##### 1 (Blue):   zero person
-##### 2 (Green):  one person
-##### 3 (Yellow): two persons
-##### 4 (White):  suspicious
+##### Pin 2 (relay channel 1):  zero person or wakeup signal
+##### Pin 3 (relay channel 2):  one person
+##### Pin 4 (relay channel 3):  two persons
+##### Pin 5 (relay channel 4):  suspicious
 
-#####   (Red):    +5V
+##### Pin 6:  +5V
 
 # View depth image and review boundary
 
@@ -50,8 +54,8 @@ Ideally, the device should be installed 2.5 to 3.5 meters above the ground, dire
 #### 1. Power on PC
 #### 2. Power on the Self-powered USB hub
 #### 3. Connect Self-powered USB hub to PC
-#### 3. Connect the people counting device to Self-powered USB
-#### 4. Wait for the yellow light start to blink about every 3 seconds
+#### 3. Connect the people counting device to self-powered USB hub
+#### 4. Wait for the 10 fast blinks of the green light and the yellow light start to blink about every 3 seconds
 #### 5. Launch web browser and enter http://10.42.0.1:8800 in the browser address bar
 
 ![Web UI](view.png)
@@ -64,13 +68,22 @@ Ideally, the device should be installed 2.5 to 3.5 meters above the ground, dire
 #### 2. Power on the Self-powered USB hub
 #### 3. Connect Self-powered USB hub to PC
 #### 3. Connect the people counting device to Self-powered USB
-#### 4. Wait for the yellow light start to blink about every 3 seconds
+#### 4. Wait for the 10 fast blinks of the green light and the yellow light start to blink about every 3 seconds
 #### 5. Connect to device IP address cat@10.42.0.1 (user name: cat, password: temppwd)
 ##### Linux: 
 ```
 ssh cat@10.42.0.1
 ```
-##### Windows: download and install Putty from here: [Download Putty](https://www.putty.org/)
+
+enter password: temppwd
+
+##### Windows: 
+
+download and install Putty from here: [Download Putty](https://www.putty.org/) 
+
+connect to the IP address (10.42.0.1) 
+
+enter user name: cat, password: temppwd
 
 ![Web UI](console.png)
 
@@ -87,13 +100,28 @@ sudo nmcli d wifi connect <WIFI_NAME> password <WIFI_PASSWORD>
 
 ![Web UI](wifi.png)
 
+After wifi connected, the device should have an IP address besides the 127.0.0.1 and 10.42.0.1:
+
+```
+ifconfig 
+```
+
+![Web UI](ip_address.png)
+
+In the screenshot above, additional IP address (10.0.0.223) obtained. 
+
+#### you may then use this wifi IP address (instead of 10.42.0.1) to connect to the device console for software update or data recording when the device installed on the ceiling, so that you do not need connect the device to your PC via an USB cable, for your convenience. 
+#### Please be aware of that, the wifi IP address is dynamic, possibly changed without you knowing about it next time the device restarted, when that happened and you can't connect to the device console using wifi IP address, you may still need to connect the device to your PC to figure out the new wifi IP address.
+
 ## Update Software
 
-#### Run command: 
+### 1. Connect to device console
+
+### 2. Run command: 
 
 ```
 sudo systemctl stop peoplecount
-cd ~/anti-tailgating
+cd ~/anti_tailgating
 git pull
 cd build
 make
@@ -102,13 +130,13 @@ exit
 
 ![Web UI](update.png)
 
-#### Power down and connect the people counting device back to 5V USB Type-C power adaptor
+#### Power down the device for at least 10 seconds before plug the device back to 5V USB Type-C power adaptor
 
-# Record Data
+## Record Data
 
-## Connect to device console
+### 1. Connect to device console
 
-## Modify startup script
+### 2. Modify startup script
 
 #### Run command: 
 
@@ -132,15 +160,13 @@ sudo /home/cat/anti_tailgating/build/peoplecount train-record
 
 Unplug the USB cable which connected to PC, and plug in 5V power adptor.
 
-Now the device in Data Recording mode
+Now the device is in Data Recording mode
 
-The device started recording data when there is person(s) in the FOV.
+### Very important: 
 
-## Very important: 
+#### 1. after data recorded, wait for at least 5 minutes before power down the device or unpluging the power adptor, otherwise the data might not be sync properly to the SD card and the recorded data might be corrupted!
 
-### 1. after data recorded, wait at least 5 minutes before unpluging the power adptor, otherwise the data might not be sync properly to the SD card and the data might be corrupted!
-
-### 2. after data recorded, follow step above of "Modify startup script" to change the startup script back to:
+#### 2. after data recorded, follow step above of "Modify startup script" to change the startup script back to:
 
 ```
 sudo /home/cat/anti_tailgating/build/peoplecount train-detect
@@ -148,7 +174,7 @@ sudo /home/cat/anti_tailgating/build/peoplecount train-detect
 
 ## Retrieve recorded data
 
-### Login into the device and run command:
+### 1. Login into the device console and run command:
 
 ```
 sudo systemctl stop peoplecount
@@ -157,11 +183,13 @@ cd ~/
 
 tar -czvf data.tar.gz data
 ```
-### Download data (Linux):
+### 2. Download data (Linux):
+
+#### Linux:
 ```
 scp cat@10.42.0.1:~/data.tar.gz ./
 ```
-### Download data (Windows):
+#### Windows:
 ```
 pscp cat@10.42.0.1:~/data.tar.gz C:\
 ```
