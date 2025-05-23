@@ -18,5 +18,6 @@ int track(
 	pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_detected,
 	pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_centers,	
 	pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_debug,
-	std::vector<SpatialObject> &tracked_objects
+	std::vector<SpatialObject> &tracked_objects,
+	float floor_height
 );

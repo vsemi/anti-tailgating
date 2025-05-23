@@ -7,7 +7,8 @@
 #include <pcl/point_cloud.h>
 
 //const float SPLIT_MIN_DIS = 0.06;
-const float SPLIT_MIN_DIS = 0.035;
+//const float SPLIT_MIN_DIS = 0.035;
+const float SPLIT_MIN_DIS = 0.0375;
 
 class Layer {
 public:

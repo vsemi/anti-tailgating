@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<style>
+		html {
+			font-size: 1.2em;
+		}
+		.col_flow {
+			float: left;
+			padding: 5px;
+		}
+		.col_fixed_left {
+			float: left;
+			width: 47.5%;
+			padding: 5px;
+		}
+		.col_fixed_right {
+			float: right;
+			width: 47.5%;
+			padding: 5px;
+		}
+		.row::after {
+			content: "";
+			clear: both;
+			display: table;
+		}
+		@media screen and (max-width: 1080px) {
+			.col_fixed_left {
+				width: 100%;
+			}
+			.col_fixed_right {
+				float: left;
+				width: 100%;
+			}
+		}
+	</style>
+  <title>Bootstrap Example</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="bootstrap.min.css">
+  <script src="jquery.min.js"></script>
+  <script src="bootstrap.min.js"></script>
+</head>
+<body>
+
+<div class="container">	
+	<div class="row">
+		<div class="col_flow">
+			<img src="vsemi.avif" style="max-width: 120px">
+		</div>
+	</div>
+	<hr>
+	<div class="row">
+	  <div class="col text-center">
+		<button id="btn_record" type="button" class="btn btn-primary">Record Data</button>
+	  </div>
+	</div>  
+</div>
+<script>
+	$(document).ready(function() {
+
+		$("#btn_record").click(function () {
+			$(this).toggleClass('btn-primary btn-danger');
+		})
+	})
+   </script>
+</body>
+</html>

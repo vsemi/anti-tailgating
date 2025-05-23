@@ -66,7 +66,8 @@ public:
 
 	bool is_at_edge;
 
-	bool is_new;
+	int age_tracked;
+	float height;
 
 	SpatialObject();
 	SpatialObject(pcl::PointCloud<pcl::PointXYZRGB>::Ptr c);
@@ -77,6 +78,6 @@ public:
 
 void refersh_track_objects(std::vector<SpatialObject> &tracked_objects);
 
-void find_and_track_object(std::vector<SpatialObject> &tracked_objects, std::vector<SpatialObject> tracked_candidates, SpatialObject &o, int queque_for_track, bool &swap, int &swapKey);
+void find_and_track_object(std::vector<SpatialObject> &tracked_objects, std::vector<SpatialObject> tracked_candidates, SpatialObject &o, int queque_for_track, bool &swap, int &swapKey, float floor_height);
 
 void audit_track_objects(std::vector<SpatialObject> &tracked_objects, int &in, int &out);
