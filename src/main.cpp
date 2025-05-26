@@ -88,8 +88,8 @@ cv::Mat_<cv::Point3f> point3f_mat_(60, 160);
 
 std::string title = "People Counting";
 
-char const *LED_RED = "83";
-char const *LED_GREEN = "84";
+char const *LED_GREEN = "83";
+char const *LED_RED   = "84";
 
 char const *RELAY_0 = "34";
 char const *RELAY_1 = "35";
@@ -214,10 +214,10 @@ void process(Camera* camera)
 				{
 					std::cout << "Training in progress: " << data_frame_id << "%, please wait ..." << std::endl;
 
-					if (gpio_available) gpio_high(LED_RED);
+					if (gpio_available) gpio_high(LED_GREEN);
 				} else
 				{
-					if (gpio_available) gpio_low(LED_RED);
+					if (gpio_available) gpio_low(LED_GREEN);
 				}
 				if (data_frame_id > 50)
 				{
@@ -245,7 +245,7 @@ void process(Camera* camera)
 					{
 						action = (char*)"view";
 					}
-					if (gpio_available) gpio_high(LED_RED);
+					if (gpio_available) gpio_low(LED_GREEN);
 				}
 			}			
 			else
@@ -796,8 +796,8 @@ int main(int argc, char** argv) {
 		gpio_init(RELAY_2);
 		gpio_init(RELAY_S);
 
-		gpio_high(LED_RED);
-		gpio_high(LED_GREEN);
+		gpio_low(LED_RED); // low on
+		gpio_high(LED_GREEN); // high on
 
 		gpio_high(RELAY_0);
 		gpio_high(RELAY_1);
@@ -828,18 +828,19 @@ int main(int argc, char** argv) {
 	usleep(1000000);
 	if (gpio_available)
 	{
-		gpio_low(LED_RED);
+		gpio_high(LED_RED);
 		gpio_low(LED_GREEN);
 	}
 
 	bool tof_ok = false;
 	std::cout << "Connect to ToF sensor ... " << std::endl;
+	usleep(5000000);
 	while ((! exit_requested) && (! tof_ok))
 	{
 		if (gpio_available)
 		{
 			usleep(1000000);
-			gpio_high(LED_RED);
+			gpio_low(LED_RED);
 		}
 		camera = Camera::usb_tof_camera_160("/dev/ttyACM0");
 		tof_ok = camera->open();
@@ -849,7 +850,7 @@ int main(int argc, char** argv) {
 			usleep(1000000);
 			if (gpio_available)
 			{
-				gpio_low(LED_RED);
+				gpio_high(LED_RED);
 			}
 			std::cout << "Opening ToF sensor ..." << std::endl;
 		} else
@@ -887,7 +888,7 @@ int main(int argc, char** argv) {
 
 		if (gpio_available)
 		{
-			gpio_high(LED_RED);
+			gpio_low(LED_RED);
 			gpio_high(LED_GREEN);
 		}
 
@@ -899,7 +900,7 @@ int main(int argc, char** argv) {
 	{
 		if (gpio_available)
 		{
-			gpio_high(LED_RED);
+			gpio_low(LED_RED);
 			gpio_high(LED_GREEN);
 		}
 	} 
