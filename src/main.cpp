@@ -88,7 +88,7 @@ cv::Mat_<cv::Point3f> point3f_mat_(60, 160);
 
 std::string title = "People Counting";
 
-char const *LED_GREEN = "83";
+//char const *LED_GREEN = "83";
 char const *LED_RED   = "84";
 
 char const *RELAY_0 = "34";
@@ -173,7 +173,7 @@ int detected_prev = -2;
 int is_awake = false;
 
 int ping_count = 0;
-bool led_green_on = false;
+bool led_red_on = false;
 int in = 0, out = 0;
 void process(Camera* camera)
 {
@@ -214,10 +214,10 @@ void process(Camera* camera)
 				{
 					std::cout << "Training in progress: " << data_frame_id << "%, please wait ..." << std::endl;
 
-					if (gpio_available) gpio_high(LED_GREEN);
+					if (gpio_available) gpio_high(LED_RED);
 				} else
 				{
-					if (gpio_available) gpio_low(LED_GREEN);
+					if (gpio_available) gpio_low(LED_RED);
 				}
 				if (data_frame_id > 50)
 				{
@@ -245,7 +245,7 @@ void process(Camera* camera)
 					{
 						action = (char*)"view";
 					}
-					if (gpio_available) gpio_low(LED_GREEN);
+					if (gpio_available) gpio_low(LED_RED);
 				}
 			}
 			else
@@ -324,24 +324,24 @@ void process(Camera* camera)
 					ping_count = 0;
 					//std::cout << "   Track ... " << std::endl;
 
-					if (! led_green_on)
+					if (! led_red_on)
 					{
-						if (gpio_available) gpio_high(LED_GREEN);
-						led_green_on = true;
+						if (gpio_available) gpio_high(LED_RED);
+						led_red_on = true;
 					} else
 					{
-						if (gpio_available) gpio_low(LED_GREEN);
-						led_green_on = false;
+						if (gpio_available) gpio_low(LED_RED);
+						led_red_on = false;
 					}
 				} else if (detected == 0 && ping_count%50 == 0)
 				{
 					ping_count = 0;
-					if (gpio_available) gpio_high(LED_GREEN);
-					led_green_on = true;
+					if (gpio_available) gpio_high(LED_RED);
+					led_red_on = true;
 				} else
 				{
-					if (gpio_available) gpio_low(LED_GREEN);
-					led_green_on = false;
+					if (gpio_available) gpio_low(LED_RED);
+					led_red_on = false;
 				}
 				ping_count ++;
 
@@ -789,15 +789,15 @@ int main(int argc, char** argv) {
 	if (gpio_available)
 	{
 		gpio_init(LED_RED);
-		gpio_init(LED_GREEN);
+		//gpio_init(LED_GREEN);
 
 		gpio_init(RELAY_0);
 		gpio_init(RELAY_1);
 		gpio_init(RELAY_2);
 		gpio_init(RELAY_S);
 
-		gpio_low(LED_RED); // low on
-		gpio_high(LED_GREEN); // high on
+		gpio_high(LED_RED); // high on
+		//gpio_low(LED_GREEN); // low on
 
 		gpio_high(RELAY_0);
 		gpio_high(RELAY_1);
@@ -825,43 +825,44 @@ int main(int argc, char** argv) {
 		return 2;
 	}
 
-	usleep(1000000);
+	usleep(2000000);
 	if (gpio_available)
 	{
-		gpio_high(LED_RED);
-		gpio_low(LED_GREEN);
+		gpio_low(LED_RED);
+		//gpio_high(LED_GREEN);
 	}
+	usleep(1000000);
 
 	bool tof_ok = false;
 	std::cout << "Connect to ToF sensor ... " << std::endl;
-	usleep(1000000);
 	while ((! exit_requested) && (! tof_ok))
 	{
 		if (gpio_available)
 		{
-			gpio_low(LED_RED);
-			usleep(3000000);
+			gpio_high(LED_RED);
 		}
+		usleep(1000000);
 		camera = Camera::usb_tof_camera_160("/dev/ttyACM0");
 		tof_ok = camera->open();
 
 		if (! tof_ok)
 		{
-			usleep(3000000);
 			if (gpio_available)
 			{
-				gpio_high(LED_RED);
+				gpio_low(LED_RED);
 			}
+			usleep(1000000);
 			std::cout << "Opening ToF sensor ..." << std::endl;
 		} else
 		{
 			sensor_uid = camera->getID();
 		}
 	}
-	usleep(1000000);
+	
 	if (gpio_available)
 	{
 		gpio_low(LED_RED);
+		//gpio_low(LED_GREEN);
 	}
 
 	std::cout << "\n" << std::endl;
@@ -888,8 +889,8 @@ int main(int argc, char** argv) {
 
 		if (gpio_available)
 		{
-			gpio_low(LED_RED);
-			gpio_high(LED_GREEN);
+			gpio_high(LED_RED);
+			//gpio_low(LED_GREEN);
 		}
 
 		integrationTime0 = 400;
@@ -900,8 +901,8 @@ int main(int argc, char** argv) {
 	{
 		if (gpio_available)
 		{
-			gpio_low(LED_RED);
-			gpio_high(LED_GREEN);
+			gpio_high(LED_RED);
+			//gpio_low(LED_GREEN);
 		}
 	}
 
@@ -922,7 +923,7 @@ int main(int argc, char** argv) {
     if (gpio_available)
 	{
 		gpio_deinit(LED_RED);
-        gpio_deinit(LED_GREEN);
+        //gpio_deinit(LED_GREEN);
 
 		gpio_deinit(RELAY_0);
 		gpio_deinit(RELAY_1);
