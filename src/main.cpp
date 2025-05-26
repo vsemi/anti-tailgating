@@ -88,7 +88,7 @@ cv::Mat_<cv::Point3f> point3f_mat_(60, 160);
 
 std::string title = "People Counting";
 
-//char const *LED_GREEN = "83";
+char const *LED_GREEN = "83";
 char const *LED_RED   = "84";
 
 char const *RELAY_0 = "34";
@@ -791,15 +791,15 @@ int main(int argc, char** argv) {
 	if (gpio_available)
 	{
 		gpio_init(LED_RED);
-		//gpio_init(LED_GREEN);
+		gpio_init(LED_GREEN);
 
 		gpio_init(RELAY_0);
 		gpio_init(RELAY_1);
 		gpio_init(RELAY_2);
 		gpio_init(RELAY_S);
 
-		gpio_high(LED_RED); // high on
-		//gpio_low(LED_GREEN); // low on
+		gpio_high(LED_RED);  // high on
+		gpio_high(LED_GREEN); // high on
 
 		gpio_high(RELAY_0);
 		gpio_high(RELAY_1);
@@ -831,7 +831,6 @@ int main(int argc, char** argv) {
 	if (gpio_available)
 	{
 		gpio_low(LED_RED);
-		//gpio_high(LED_GREEN);
 	}
 	usleep(1000000);
 
@@ -844,8 +843,10 @@ int main(int argc, char** argv) {
 			gpio_high(LED_RED);
 		}
 		usleep(1000000);
+		std::cout << "   open ToF sensor at /dev/ttyACM0 ..." << std::endl;
 		camera = Camera::usb_tof_camera_160("/dev/ttyACM0");
 		tof_ok = camera->open();
+		std::cout << "   sensor at /dev/ttyACM0 connected." << std::endl;
 
 		if (! tof_ok)
 		{
@@ -860,11 +861,10 @@ int main(int argc, char** argv) {
 			sensor_uid = camera->getID();
 		}
 	}
-
+	
 	if (gpio_available)
 	{
 		gpio_low(LED_RED);
-		//gpio_low(LED_GREEN);
 	}
 
 	std::cout << "\n" << std::endl;
@@ -892,7 +892,6 @@ int main(int argc, char** argv) {
 		if (gpio_available)
 		{
 			gpio_high(LED_RED);
-			//gpio_low(LED_GREEN);
 		}
 
 		integrationTime0 = 400;
@@ -904,7 +903,6 @@ int main(int argc, char** argv) {
 		if (gpio_available)
 		{
 			gpio_high(LED_RED);
-			//gpio_low(LED_GREEN);
 		}
 	}
 
@@ -925,7 +923,7 @@ int main(int argc, char** argv) {
     if (gpio_available)
 	{
 		gpio_deinit(LED_RED);
-        //gpio_deinit(LED_GREEN);
+        gpio_deinit(LED_GREEN);
 
 		gpio_deinit(RELAY_0);
 		gpio_deinit(RELAY_1);
