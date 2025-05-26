@@ -786,6 +786,8 @@ int main(int argc, char** argv) {
 		wakeUp = true;
 	}
 
+	usleep(10000000);
+
 	if (gpio_available)
 	{
 		gpio_init(LED_RED);
@@ -858,7 +860,7 @@ int main(int argc, char** argv) {
 			sensor_uid = camera->getID();
 		}
 	}
-	
+
 	if (gpio_available)
 	{
 		gpio_low(LED_RED);
