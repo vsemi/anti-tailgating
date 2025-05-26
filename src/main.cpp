@@ -194,7 +194,7 @@ void process(Camera* camera)
 	int data_frame_id = 0;
 
 	std::vector<SpatialObject> tracked_objects;
-	
+
 	while (! exit_requested)
 	{
 		try
@@ -247,14 +247,14 @@ void process(Camera* camera)
 					}
 					if (gpio_available) gpio_low(LED_GREEN);
 				}
-			}			
+			}
 			else
 			{
 				pcl::PointCloud<pcl::PointXYZRGB>::Ptr point_cloud_ptr(new pcl::PointCloud<pcl::PointXYZRGB>);
 
 				if (
-					strcmp(action, "detect") == 0 || 
-					strcmp(action, "record") == 0 || 
+					strcmp(action, "detect") == 0 ||
+					strcmp(action, "record") == 0 ||
 					strcmp(action, "view") == 0
 				)
 				{
@@ -266,7 +266,7 @@ void process(Camera* camera)
 					point_cloud_ptr->width = tofImage.n_points;
 					point_cloud_ptr->height = 1;
 					point_cloud_ptr->is_dense = false;
-				} 
+				}
 				else if (strcmp(action, "test") == 0)
 				{
 					if (test_index < 10)
@@ -278,9 +278,9 @@ void process(Camera* camera)
 					} else if (test_index >= 20 && test_index < 30)
 					{
 						*point_cloud_ptr = *cloud_test_2;
-					}					
+					}
 					test_index ++;
-					if (test_index >= 30) 
+					if (test_index >= 30)
 					{
 						test_index = 0;
 					}
@@ -353,7 +353,7 @@ void process(Camera* camera)
 								saturated_points ++;
 						}
 				}
-				
+
 				if (saturated_points > 500)
 				{
 						detected = -1;
@@ -369,24 +369,24 @@ void process(Camera* camera)
 							if (! is_awake)
 							{
 								is_awake = true;
-								if (gpio_available) gpio_low(RELAY_0); 
+								if (gpio_available) gpio_low(RELAY_0);
 								std::cout << "======> power relay -> wakeup ON" << std::endl;
 							}
-						} else 
+						} else
 						{
 							if (is_awake)
 							{
 								is_awake = false;
-								if (gpio_available) gpio_high(RELAY_0); 
+								if (gpio_available) gpio_high(RELAY_0);
 								std::cout << "======> power relay -> wakeup OFF" << std::endl;
-							}							
+							}
 						}
 					}
 					if (detected_prev != detected)
 					{
-							//gpio_high //gpio_low                                                
+							//gpio_high //gpio_low
 						if (detected_prev == 0) {
-								if (! wakeUp) 
+								if (! wakeUp)
 								{
 									if (gpio_available) gpio_high(RELAY_0);
 									std::cout << "======> power relay -> 0 OFF" << std::endl;
@@ -406,20 +406,20 @@ void process(Camera* camera)
 						}
 
 						if (detected == 0) {
-							if (! wakeUp) 
+							if (! wakeUp)
 							{
-								if (gpio_available) gpio_low(RELAY_0); 
+								if (gpio_available) gpio_low(RELAY_0);
 								std::cout << "======> power relay -> 0 ON" << std::endl;
 							}
 						}
 						if (detected == 1) {
 							if (gpio_available) gpio_low(RELAY_1);
 							std::cout << "======> power relay -> 1 ON" << std::endl;
-						} 
+						}
 						if (detected >= 2) {
 							if (gpio_available) gpio_low(RELAY_2);
 							std::cout << "======> power relay -> 2 ON" << std::endl;
-						} 
+						}
 						if (detected == -1) {
 							if (gpio_available) gpio_low(RELAY_S);
 							std::cout << "======> power relay -> S ON" << std::endl;
@@ -428,7 +428,7 @@ void process(Camera* camera)
 						detected_prev = detected;
 					}
 				}
-				
+
 				if (strcmp(action, "record") == 0)
 				{
 					std::cout << "======> cloud.cloud->points: " << cloud.cloud->points.size() << " empty_frames_interval: " << empty_frames_interval << std::endl;
@@ -513,7 +513,7 @@ void process(Camera* camera)
 							exit_requested = true;
 						}
 					}
-					
+
 					if (strcmp(action, "view") == 0)
 					{
 						streamer->write(depth_bgr_display);
@@ -767,7 +767,7 @@ int main(int argc, char** argv) {
 		test_data_path = "/home/cat/anti_tailgating/test/";
 		gpio_available = true;
 		otg_ip_address = "10.42.0.1";
-	} else 
+	} else
 	{
 		sd_card = (char*) "/home/vsemi/data/peoplecount/test";
 	}
@@ -781,7 +781,7 @@ int main(int argc, char** argv) {
 		return 1;
 	}
 
-	if (argc >= 3 && strcmp(argv[2], "wake") == 0) 
+	if (argc >= 3 && strcmp(argv[2], "wake") == 0)
 	{
 		wakeUp = true;
 	}
@@ -824,7 +824,7 @@ int main(int argc, char** argv) {
 		std::cout << "No Data Storage found, please insert a Data Storage. " << std::endl;
 		return 2;
 	}
-	
+
 	usleep(1000000);
 	if (gpio_available)
 	{
@@ -834,20 +834,20 @@ int main(int argc, char** argv) {
 
 	bool tof_ok = false;
 	std::cout << "Connect to ToF sensor ... " << std::endl;
-	usleep(5000000);
+	usleep(1000000);
 	while ((! exit_requested) && (! tof_ok))
 	{
 		if (gpio_available)
 		{
-			usleep(1000000);
 			gpio_low(LED_RED);
+			usleep(3000000);
 		}
 		camera = Camera::usb_tof_camera_160("/dev/ttyACM0");
 		tof_ok = camera->open();
 
 		if (! tof_ok)
 		{
-			usleep(1000000);
+			usleep(3000000);
 			if (gpio_available)
 			{
 				gpio_high(LED_RED);
@@ -895,7 +895,7 @@ int main(int argc, char** argv) {
 		integrationTime0 = 400;
 
 		std::cout << "\nStarting view mode, point browser to http://10.42.0.1:8800 to view ToF distance iamge.\n" << std::endl;
-	} 
+	}
 	else if (strcmp(action, "test") == 0)
 	{
 		if (gpio_available)
@@ -903,8 +903,8 @@ int main(int argc, char** argv) {
 			gpio_low(LED_RED);
 			gpio_high(LED_GREEN);
 		}
-	} 
-	
+	}
+
 	start();
 
 	if (strcmp(action, "view") == 0 || strcmp(action, "train-view") == 0)
