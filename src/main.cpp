@@ -119,14 +119,14 @@ inline bool file_exists (const std::string& name) {
 bool has_ip_address(std::string ip)
 {
     struct ifaddrs* ptr_ifaddrs = nullptr;
-
+	//std::cout << "has ip address ...1" << std::endl;
     auto result = getifaddrs(&ptr_ifaddrs);
     if( result != 0 ){
         std::cout << "`getifaddrs()` failed: " << strerror(errno) << std::endl;
 
         return EX_OSERR;
     }
-
+	//std::cout << "has ip address ...2" << std::endl;
     for(
         struct ifaddrs* ptr_entry = ptr_ifaddrs;
         ptr_entry != nullptr;
@@ -134,29 +134,36 @@ bool has_ip_address(std::string ip)
     ){
         std::string ipaddress_human_readable_form;
         std::string netmask_human_readable_form;
-
+		//std::cout << "has ip address ...2.0" << std::endl;
+		if (ptr_entry == nullptr || ptr_entry->ifa_addr == nullptr) continue;
         std::string interface_name = std::string(ptr_entry->ifa_name);
-        sa_family_t address_family = ptr_entry->ifa_addr->sa_family;
-        if( address_family == AF_INET ){
+		//std::cout << "has ip address ...2.0.0: " << ptr_entry->ifa_addr << std::endl;
+		if (ptr_entry->ifa_addr)
+		{
+			sa_family_t address_family = ptr_entry->ifa_addr->sa_family;
+			//std::cout << "has ip address ...2.1" << std::endl;
+			if( address_family == AF_INET ){
+				//std::cout << "has ip address ...2.1.0" << std::endl;
+				if( ptr_entry != nullptr && ptr_entry->ifa_addr != nullptr ){
+					//std::cout << "has ip address ...2.1.1" << std::endl;
+					char buffer[INET_ADDRSTRLEN] = {0, };
+					inet_ntop(
+						address_family,
+						&((struct sockaddr_in*)(ptr_entry->ifa_addr))->sin_addr,
+						buffer,
+						INET_ADDRSTRLEN
+					);
+					//std::cout << "has ip address ...2.1.2" << std::endl;
+					ipaddress_human_readable_form = std::string(buffer);
 
-            if( ptr_entry->ifa_addr != nullptr ){
-                char buffer[INET_ADDRSTRLEN] = {0, };
-                inet_ntop(
-                    address_family,
-                    &((struct sockaddr_in*)(ptr_entry->ifa_addr))->sin_addr,
-                    buffer,
-                    INET_ADDRSTRLEN
-                );
+					//std::cout << interface_name << ": IP address = " << ipaddress_human_readable_form << std::endl;
 
-                ipaddress_human_readable_form = std::string(buffer);
-
-				std::cout << interface_name << ": IP address = " << ipaddress_human_readable_form << std::endl;
-
-				if (ipaddress_human_readable_form == ip) return true;
-            }
-        }
+					if (ipaddress_human_readable_form == ip) return true;
+				}
+			}
+		}
     }
-
+	//std::cout << "has ip address ...3" << std::endl;
     freeifaddrs(ptr_ifaddrs);
 
     return false;
@@ -836,6 +843,7 @@ int main(int argc, char** argv) {
 
 	bool tof_ok = false;
 	std::cout << "Connect to ToF sensor ... " << std::endl;
+	int serial_n = 0;
 	while ((! exit_requested) && (! tof_ok))
 	{
 		if (gpio_available)
@@ -843,22 +851,26 @@ int main(int argc, char** argv) {
 			gpio_high(LED_RED);
 		}
 		usleep(1000000);
-		std::cout << "   open ToF sensor at /dev/ttyACM0 ..." << std::endl;
-		camera = Camera::usb_tof_camera_160("/dev/ttyACM0");
+		std::string sensor_port = "/dev/ttyACM" + std::to_string(serial_n);
+		std::cout << "   open ToF sensor at " << sensor_port << " ..." << std::endl;
+		camera = Camera::usb_tof_camera_160(sensor_port);
 		tof_ok = camera->open();
-		std::cout << "   sensor at /dev/ttyACM0 connected." << std::endl;
 
 		if (! tof_ok)
 		{
+			std::cout << "   sensor at : " << sensor_port << " is not available." << std::endl;
+
 			if (gpio_available)
 			{
 				gpio_low(LED_RED);
 			}
 			usleep(1000000);
-			std::cout << "Opening ToF sensor ..." << std::endl;
+			serial_n ++;
+			if (serial_n > 5) serial_n = 0;
 		} else
 		{
 			sensor_uid = camera->getID();
+			std::cout << "   sensor at : " << sensor_port << " connected." << std::endl;
 		}
 	}
 	
