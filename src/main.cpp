@@ -100,12 +100,9 @@ bool wakeUp = false;
 
 bool gpio_available = false;
 
-std::string otg_ip_address = "10.42.0.1";//"10.10.31.191";
+std::string otg_ip_address = "10.42.0.1";
 
 MJPGStreamer* streamer;
-
-std::vector<pcl::PointCloud<pcl::PointXYZRGB>::Ptr> queque_record;
-std::mutex mutex_queque_record;
 
 inline bool file_exists (const std::string& name) {
 	if (name != "") {
@@ -169,13 +166,6 @@ bool has_ip_address(std::string ip)
     return false;
 }
 
-int empty_frames_interval = 0;
-bool pause_process = false;
-pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_test_0(new pcl::PointCloud<pcl::PointXYZRGB>);
-pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_test_1(new pcl::PointCloud<pcl::PointXYZRGB>);
-pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_test_2(new pcl::PointCloud<pcl::PointXYZRGB>);
-int test_index = 0;
-
 int detected_prev = -2;
 int is_awake = false;
 
@@ -214,7 +204,7 @@ void process(Camera* camera)
 				continue;
 			}
 
-			if (strcmp(action, "train") == 0 || strcmp(action, "train-detect") == 0 || strcmp(action, "train-record") == 0 || strcmp(action, "train-view") == 0)
+			if (strcmp(action, "train-detect") == 0 || strcmp(action, "train-view") == 0)
 			{
 				train(tofImage.data_3d_xyz_rgb, data_background);
 				if (data_frame_id >= 5 && data_frame_id < 50 && data_frame_id % 5 == 0)
@@ -239,15 +229,9 @@ void process(Camera* camera)
 
 					std::cout << "\nTraining completed, starting detect ..." << std::endl;
 
-					if (strcmp(action, "train") == 0)
-					{
-						break;
-					} else if (strcmp(action, "train-detect") == 0)
+					if (strcmp(action, "train-detect") == 0)
 					{
 						action = (char*)"detect";
-					} else if (strcmp(action, "train-record") == 0)
-					{
-						action = (char*)"record";
 					} else if (strcmp(action, "train-view") == 0)
 					{
 						action = (char*)"view";
@@ -259,40 +243,15 @@ void process(Camera* camera)
 			{
 				pcl::PointCloud<pcl::PointXYZRGB>::Ptr point_cloud_ptr(new pcl::PointCloud<pcl::PointXYZRGB>);
 
-				if (
-					strcmp(action, "detect") == 0 ||
-					strcmp(action, "record") == 0 ||
-					strcmp(action, "view") == 0
-				)
-				{
-					pcl::PointXYZRGB* data_ptr = reinterpret_cast<pcl::PointXYZRGB*>(tofImage.data_3d_xyz_rgb);
-					std::vector<pcl::PointXYZRGB> pts(data_ptr, data_ptr + tofImage.n_points);
-					point_cloud_ptr->points.clear();
-					point_cloud_ptr->points.insert(point_cloud_ptr->points.end(), pts.begin(), pts.end());
-					point_cloud_ptr->resize(tofImage.n_points);
-					point_cloud_ptr->width = tofImage.n_points;
-					point_cloud_ptr->height = 1;
-					point_cloud_ptr->is_dense = false;
-				}
-				else if (strcmp(action, "test") == 0)
-				{
-					if (test_index < 10)
-					{
-						*point_cloud_ptr = *cloud_test_0;
-					} else if (test_index >= 10 && test_index < 20)
-					{
-						*point_cloud_ptr = *cloud_test_1;
-					} else if (test_index >= 20 && test_index < 30)
-					{
-						*point_cloud_ptr = *cloud_test_2;
-					}
-					test_index ++;
-					if (test_index >= 30)
-					{
-						test_index = 0;
-					}
-				}
-
+				pcl::PointXYZRGB* data_ptr = reinterpret_cast<pcl::PointXYZRGB*>(tofImage.data_3d_xyz_rgb);
+				std::vector<pcl::PointXYZRGB> pts(data_ptr, data_ptr + tofImage.n_points);
+				point_cloud_ptr->points.clear();
+				point_cloud_ptr->points.insert(point_cloud_ptr->points.end(), pts.begin(), pts.end());
+				point_cloud_ptr->resize(tofImage.n_points);
+				point_cloud_ptr->width = tofImage.n_points;
+				point_cloud_ptr->height = 1;
+				point_cloud_ptr->is_dense = false;
+				
 				Cloud cloud;
 				filterAndDownSample(point_cloud_ptr, cloud, data_background);
 
@@ -329,7 +288,6 @@ void process(Camera* camera)
 				if (detected > 0 && ping_count%2 == 0)
 				{
 					ping_count = 0;
-					//std::cout << "   Track ... " << std::endl;
 
 					if (! led_red_on)
 					{
@@ -391,7 +349,6 @@ void process(Camera* camera)
 					}
 					if (detected_prev != detected)
 					{
-							//gpio_high //gpio_low
 						if (detected_prev == 0) {
 								if (! wakeUp)
 								{
@@ -436,26 +393,7 @@ void process(Camera* camera)
 					}
 				}
 
-				if (strcmp(action, "record") == 0)
-				{
-					std::cout << "======> cloud.cloud->points: " << cloud.cloud->points.size() << " empty_frames_interval: " << empty_frames_interval << std::endl;
-					std::unique_lock<std::mutex> lock_queque_record(mutex_queque_record);
-					if (cloud.cloud->points.size() > 30)
-					{
-						queque_record.push_back(point_cloud_ptr);
-						empty_frames_interval = 0;
-					} else
-					{
-						if (empty_frames_interval < 5)
-						{
-							queque_record.push_back(point_cloud_ptr);
-							empty_frames_interval ++;
-						}
-					}
-					lock_queque_record.unlock();
-				}
-
-				if (strcmp(action, "view") == 0 || strcmp(action, "test") == 0)
+				if (strcmp(action, "view") == 0)
 				{
 					depth_bgr = cv::Mat(tofImage.height, tofImage.width, CV_8UC3, tofImage.data_2d_bgr);
 
@@ -512,19 +450,7 @@ void process(Camera* camera)
 						);
 					}
 
-					if (strcmp(action, "test") == 0)
-					{
-						cv::imshow("Anti-Tailgating", depth_bgr_display);
-						if (cv::waitKey(1) == 27)
-						{
-							exit_requested = true;
-						}
-					}
-
-					if (strcmp(action, "view") == 0)
-					{
-						streamer->write(depth_bgr_display);
-					}
+					streamer->write(depth_bgr_display);
 				}
 			}
 
@@ -542,80 +468,6 @@ void process(Camera* camera)
 	interval = ((double) std::chrono::duration_cast<std::chrono::microseconds>(en_time0 - st_time0).count()) / 1000000.0;
 	frame_rate = ((double) data_frame_id) / interval;
 	std::cout << "Frames: " << data_frame_id << " time spent: " << interval << " frame rate: " << frame_rate << std::endl;
-}
-
-int i_frame_id = 0;
-int i_frame_total = 0;
-bool refresh_folder_path(std::string &f_path)
-{
-	char date_str[9];
-	std::time_t t = std::time(NULL);
-	std::strftime(date_str, sizeof(date_str), "%Y%m%d", std::localtime(&t));
-	f_path = std::string(sd_card) + "/" + std::string(date_str);
-
-	if (!file_exists(f_path))
-	{
-		int status = mkdir(f_path.c_str(),0777);
-		if (status == 0)
-		{
-			std::cerr << "Folder " << f_path << " created, recording started ..." << std::endl;
-			i_frame_id = 0;
-		} else
-		{
-			std::cerr << "Failed to create folder in " << sd_card << ", recording skipped!" << std::endl;
-			return false;
-		}
-	}
-
-	return true;
-}
-
-void record_data()
-{
-	std::string f_path = "";
-	bool file_system_ok = refresh_folder_path(f_path);
-	if (! file_system_ok)
-	{
-		exit_requested = true;
-	}
-
-	while (! exit_requested)
-	{
-		try
-		{
-
-			if (queque_record.size() > 0)
-			{
-				file_system_ok = refresh_folder_path(f_path);
-				if (! file_system_ok)
-				{
-					exit_requested = true;
-				}
-
-				pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_raw = queque_record[0];
-				queque_record.erase (queque_record.begin());
-
-				std::string fn = f_path + "/" + std::to_string(i_frame_id) + ".pcd";
-
-				//std::cerr << "Saving data into fn: " << fn << std::endl;
-				pcl::io::savePCDFileBinary(fn.c_str(), *cloud_raw);
-
-				if (i_frame_total > 50000) {
-					exit_requested = true;
-					std::cerr << "Maximum number of frames reached: " << i_frame_total << std::endl;
-					std::cerr << "Please clean data storage and restart recording again! " << std::endl;
-				}
-
-				i_frame_id ++;
-				i_frame_total ++;
-			} else{
-				usleep(1);
-			}
-		} catch (...)
-		{
-			std::cerr << "Unknown error in record_data ... " << std::endl;
-		}
-	}
 }
 
 void start()
@@ -738,12 +590,6 @@ void start()
 	std::cout << "HDR:              " << hdr_mode << std::endl;
 	std::cout << "\n" << std::endl;
 
-	if (strcmp(action, "record") == 0 || strcmp(action, "train-record") == 0)
-	{
-		std::thread th_record_data(&record_data);
-		th_record_data.detach();
-	}
-
 	process(camera);
 
 	delete camera;
@@ -768,15 +614,13 @@ int main(int argc, char** argv) {
 
 	data_background = new float[9600];
 
-	std::string test_data_path = "/home/vsemi/dev/anti_tailgating/test/";
 	if (file_exists("/home/cat"))
 	{
-		test_data_path = "/home/cat/anti_tailgating/test/";
 		gpio_available = true;
 		otg_ip_address = "10.42.0.1";
 	} else
 	{
-		sd_card = (char*) "/home/vsemi/data/peoplecount/test";
+		sd_card = (char*) "/home/vsemi/data/peoplecount";
 	}
 
 	if (argc >= 2)
@@ -784,7 +628,7 @@ int main(int argc, char** argv) {
 		action = argv[1];
 		std::cout << "Mode:            " << action << std::endl;
 	} else {
-		std::cout << "Usage: peoplecount [train-detect | train-record | train-view | test]"<< std::endl;
+		std::cout << "Usage: peoplecount [train-detect | train-view]"<< std::endl;
 		return 1;
 	}
 
@@ -812,20 +656,6 @@ int main(int argc, char** argv) {
 		gpio_high(RELAY_1);
 		gpio_high(RELAY_2);
 		gpio_high(RELAY_S);
-	}
-
-	if (strcmp(action, "test") == 0)
-	{
-		read(test_data_path + "model.bin", data_background);
-		for (int i = 0; i < 9600; i ++)
-		{
-			if (floor_height < data_background[i]) floor_height = data_background[i];
-		}
-		floor_height -= 0.1; //offset
-		std::cout << "   floor_height: " << floor_height << std::endl;
-		pcl::io::loadPCDFile<pcl::PointXYZRGB> (test_data_path + "0.pcd", *cloud_test_0);
-		pcl::io::loadPCDFile<pcl::PointXYZRGB> (test_data_path + "1.pcd", *cloud_test_1);
-		pcl::io::loadPCDFile<pcl::PointXYZRGB> (test_data_path + "2.pcd", *cloud_test_2);
 	}
 
 	if (! file_exists(sd_card))
@@ -893,7 +723,7 @@ int main(int argc, char** argv) {
 		action = (char*)"train-view";
 	}
 
-	if (strcmp(action, "view") == 0 || strcmp(action, "train-view") == 0)
+	if (strcmp(action, "train-view") == 0)
 	{
 		std::thread th_http(&start_http_server);
 		th_http.detach();
@@ -909,13 +739,6 @@ int main(int argc, char** argv) {
 		integrationTime0 = 400;
 
 		std::cout << "\nStarting view mode, point browser to http://10.42.0.1:8800 to view ToF distance iamge.\n" << std::endl;
-	}
-	else if (strcmp(action, "test") == 0)
-	{
-		if (gpio_available)
-		{
-			gpio_high(LED_RED);
-		}
 	}
 
 	start();
