@@ -224,8 +224,8 @@ void process(Camera* camera)
 					{
 						if (floor_height < data_background[i]) floor_height = data_background[i];
 					}
-					floor_height -= 0.1; //offset
-					std::cout << "   floor_height: " << floor_height << std::endl;
+					floor_height -= 0.1; 
+					std::cout << "\nFloor: " << floor_height << std::endl;
 
 					std::cout << "\nTraining completed, starting detect ..." << std::endl;
 
@@ -635,9 +635,13 @@ int main(int argc, char** argv) {
 	if (argc >= 3 && strcmp(argv[2], "wake") == 0)
 	{
 		wakeUp = true;
+		std::cout << "                 wake up" << std::endl;
 	}
 
-	usleep(10000000);
+	bool otg_connected = has_ip_address(otg_ip_address);
+	if (otg_connected) std::cout << "                 otg" << otg_connected << std::endl;
+
+	usleep(2000000);
 
 	if (gpio_available)
 	{
@@ -662,9 +666,12 @@ int main(int argc, char** argv) {
 	{
 		std::cout << "No Data Storage found, please insert a Data Storage. " << std::endl;
 		return 2;
+	} else 
+	{
+		std::cout << "data Storage: " << sd_card << std::endl;
 	}
-
 	usleep(2000000);
+	
 	if (gpio_available)
 	{
 		gpio_low(LED_RED);
@@ -673,14 +680,10 @@ int main(int argc, char** argv) {
 
 	bool tof_ok = false;
 	std::cout << "Connect to ToF sensor ... " << std::endl;
-	int serial_n = 0;
+	int attempts = 0;
 	while ((! exit_requested) && (! tof_ok))
-	{
-		if (gpio_available)
-		{
-			gpio_high(LED_RED);
-		}
-		usleep(1000000);
+	{		
+		int serial_n = attempts / 5;
 		std::string sensor_port = "/dev/ttyACM" + std::to_string(serial_n);
 		std::cout << "   open ToF sensor at " << sensor_port << " ..." << std::endl;
 		camera = Camera::usb_tof_camera_160(sensor_port);
@@ -692,13 +695,22 @@ int main(int argc, char** argv) {
 
 			if (gpio_available)
 			{
-				gpio_low(LED_RED);
+				gpio_high(LED_RED);
 			}
 			usleep(1000000);
-			serial_n ++;
-			if (serial_n > 5) serial_n = 0;
+			if (gpio_available)
+			{
+				gpio_low(LED_RED);
+			}
+			attempts ++;
+			if (attempts >= 15) attempts = 0;
 		} else
 		{
+			if (gpio_available)
+			{
+				gpio_high(LED_RED);
+			}
+			usleep(1000000);
 			sensor_uid = camera->getID();
 			std::cout << "   sensor at : " << sensor_port << " connected." << std::endl;
 		}
@@ -714,9 +726,6 @@ int main(int argc, char** argv) {
 	std::cout << "Device ID:         " << sensor_uid << std::endl;
 	std::cout << "--------------------------------------" << std::endl;
 	std::cout << "\n" << std::endl;
-
-	bool otg_connected = has_ip_address(otg_ip_address);
-	std::cout << "otg connected ..." << otg_connected << std::endl;
 
 	if (otg_connected)
 	{
