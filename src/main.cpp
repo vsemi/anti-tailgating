@@ -96,6 +96,7 @@ char const *RELAY_1 = "35";
 char const *RELAY_2 = "36";
 char const *RELAY_S = "37";
 
+bool relay_high_effective = false;
 bool wakeUp = false;
 
 bool gpio_available = false;
@@ -111,6 +112,28 @@ inline bool file_exists (const std::string& name) {
 	}
 
 	return false;
+}
+
+void relay_ON(char const *gpio_pin)
+{
+	if (relay_high_effective)
+	{
+		gpio_high(gpio_pin);
+	} else 
+	{
+		gpio_low(gpio_pin);
+	}
+}
+
+void relay_OFF(char const *gpio_pin)
+{
+	if (relay_high_effective)
+	{
+		gpio_low(gpio_pin);
+	} else 
+	{
+		gpio_high(gpio_pin);
+	}
 }
 
 bool has_ip_address(std::string ip)
@@ -334,16 +357,16 @@ void process(Camera* camera)
 							if (! is_awake)
 							{
 								is_awake = true;
-								if (gpio_available) gpio_low(RELAY_0);
-								std::cout << "======> power relay -> wakeup ON" << std::endl;
+								if (gpio_available) relay_ON(RELAY_0);
+								std::cout << "              relay -> wakeup ON" << std::endl;
 							}
 						} else
 						{
 							if (is_awake)
 							{
 								is_awake = false;
-								if (gpio_available) gpio_high(RELAY_0);
-								std::cout << "======> power relay -> wakeup OFF" << std::endl;
+								if (gpio_available) relay_OFF(RELAY_0);
+								std::cout << "              relay -> wakeup OFF" << std::endl;
 							}
 						}
 					}
@@ -352,41 +375,41 @@ void process(Camera* camera)
 						if (detected_prev == 0) {
 								if (! wakeUp)
 								{
-									if (gpio_available) gpio_high(RELAY_0);
-									std::cout << "======> power relay -> 0 OFF" << std::endl;
+									if (gpio_available) relay_OFF(RELAY_0);
+									std::cout << "              relay -> 0 OFF" << std::endl;
 								}
 						}
 						if (detected_prev == 1) {
-								if (gpio_available) gpio_high(RELAY_1);
-								std::cout << "======> power relay -> 1 OFF" << std::endl;
+								if (gpio_available) relay_OFF(RELAY_1);
+								std::cout << "              relay -> 1 OFF" << std::endl;
 						}
 						if (detected_prev >= 2) {
-								if (gpio_available) gpio_high(RELAY_2);
-								std::cout << "======> power relay -> 2 OFF" << std::endl;
+								if (gpio_available) relay_OFF(RELAY_2);
+								std::cout << "              relay -> 2 OFF" << std::endl;
 						}
 						if (detected_prev == -1) {
-								if (gpio_available) gpio_high(RELAY_S);
-								std::cout << "======> power relay -> S OFF" << std::endl;
+								if (gpio_available) relay_OFF(RELAY_S);
+								std::cout << "              relay -> S OFF" << std::endl;
 						}
 
 						if (detected == 0) {
 							if (! wakeUp)
 							{
-								if (gpio_available) gpio_low(RELAY_0);
-								std::cout << "======> power relay -> 0 ON" << std::endl;
+								if (gpio_available) relay_ON(RELAY_0);
+								std::cout << "              relay -> 0 ON" << std::endl;
 							}
 						}
 						if (detected == 1) {
-							if (gpio_available) gpio_low(RELAY_1);
-							std::cout << "======> power relay -> 1 ON" << std::endl;
+							if (gpio_available) relay_ON(RELAY_1);
+							std::cout << "              relay -> 1 ON" << std::endl;
 						}
 						if (detected >= 2) {
-							if (gpio_available) gpio_low(RELAY_2);
-							std::cout << "======> power relay -> 2 ON" << std::endl;
+							if (gpio_available) relay_ON(RELAY_2);
+							std::cout << "              relay -> 2 ON" << std::endl;
 						}
 						if (detected == -1) {
-							if (gpio_available) gpio_low(RELAY_S);
-							std::cout << "======> power relay -> S ON" << std::endl;
+							if (gpio_available) relay_ON(RELAY_S);
+							std::cout << "              relay -> S ON" << std::endl;
 						}
 
 						detected_prev = detected;
@@ -585,8 +608,8 @@ void start()
 
 	std::cout << "integrationTime0: " << integrationTime0 << std::endl;
 	std::cout << "integrationTime1: " << integrationTime1 << std::endl;
-	std::cout << "amplitude0:        " << amplitude0 << std::endl;
-	std::cout << "amplitude1:        " << amplitude1 << std::endl;
+	std::cout << "amplitude0:       " << amplitude0 << std::endl;
+	std::cout << "amplitude1:       " << amplitude1 << std::endl;
 	std::cout << "HDR:              " << hdr_mode << std::endl;
 	std::cout << "\n" << std::endl;
 
@@ -599,9 +622,8 @@ void exit_handler(int s){
 	std::cout << "\nExiting ... " << std::endl;
 	exit_requested = true;
 	fflush(stdout);
-	usleep(2000000);
+	usleep(1000000);
 	signal(SIGINT, exit_handler);
-	//exit(0);
 }
 
 int main(int argc, char** argv) {
@@ -637,6 +659,20 @@ int main(int argc, char** argv) {
 		wakeUp = true;
 		std::cout << "                 wake up" << std::endl;
 	}
+	if (argc >= 3 && strcmp(argv[2], "high") == 0)
+	{
+		relay_high_effective = true;
+		std::cout << "                 relay high effective" << std::endl;
+	}
+	if (argc >= 4 && strcmp(argv[3], "high") == 0)
+	{
+		relay_high_effective = true;
+		std::cout << "                 relay high effective" << std::endl;
+	}
+	if (! relay_high_effective)
+	{
+		std::cout << "                 relay low effective" << std::endl;
+	}
 
 	bool otg_connected = has_ip_address(otg_ip_address);
 	if (otg_connected) std::cout << "                 otg" << otg_connected << std::endl;
@@ -653,13 +689,13 @@ int main(int argc, char** argv) {
 		gpio_init(RELAY_2);
 		gpio_init(RELAY_S);
 
-		gpio_high(LED_RED);  // high on
-		gpio_high(LED_GREEN); // high on
+		gpio_high(LED_RED);
+		gpio_high(LED_GREEN);
 
-		gpio_high(RELAY_0);
-		gpio_high(RELAY_1);
-		gpio_high(RELAY_2);
-		gpio_high(RELAY_S);
+		relay_OFF(RELAY_0);
+		relay_OFF(RELAY_1);
+		relay_OFF(RELAY_2);
+		relay_OFF(RELAY_S);
 	}
 
 	if (! file_exists(sd_card))
@@ -668,7 +704,7 @@ int main(int argc, char** argv) {
 		return 2;
 	} else 
 	{
-		std::cout << "data Storage: " << sd_card << std::endl;
+		std::cout << "data Storage:    " << sd_card << std::endl;
 	}
 	usleep(2000000);
 	
@@ -679,19 +715,19 @@ int main(int argc, char** argv) {
 	usleep(1000000);
 
 	bool tof_ok = false;
-	std::cout << "Connect to ToF sensor ... " << std::endl;
+	std::cout << "" << std::endl;
 	int attempts = 0;
 	while ((! exit_requested) && (! tof_ok))
 	{		
 		int serial_n = attempts / 5;
 		std::string sensor_port = "/dev/ttyACM" + std::to_string(serial_n);
-		std::cout << "   open ToF sensor at " << sensor_port << " ..." << std::endl;
+		std::cout << "connect to ToF sensor at " << sensor_port << " ..." << std::endl;
 		camera = Camera::usb_tof_camera_160(sensor_port);
 		tof_ok = camera->open();
 
 		if (! tof_ok)
 		{
-			std::cout << "   sensor at : " << sensor_port << " is not available." << std::endl;
+			std::cout << "    sensor at : " << sensor_port << " is not available." << std::endl;
 
 			if (gpio_available)
 			{
@@ -712,7 +748,7 @@ int main(int argc, char** argv) {
 			}
 			usleep(1000000);
 			sensor_uid = camera->getID();
-			std::cout << "   sensor at : " << sensor_port << " connected." << std::endl;
+			std::cout << "sensor at : " << sensor_port << " connected." << std::endl;
 		}
 	}
 	
