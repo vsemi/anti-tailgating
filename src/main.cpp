@@ -45,20 +45,18 @@
 #include <pcl/segmentation/sac_segmentation.h>
 #include <pcl/segmentation/extract_clusters.h>
 
-#include <Camera.hpp>
-#include "people_counting.h"
-#include "dgp.h"
-#include "utils.h"
-
 #include <sqlite3.h>
+
+#include <Camera.hpp>
+
+#include "people_counting.h"
 
 #include "MQTTAsync.h"
 #include "lora.hpp"
+
 #include "io.h"
 
 #include "MJPGStreamer.h"
-#include "tracking.h"
-
 #include "http_service.h"
 
 u_int32_t sensor_uid;
@@ -74,11 +72,11 @@ float floor_height = 0.0;
 
 volatile bool exit_requested = false;
 
-unsigned int integrationTime0 = 1000;
+unsigned int integrationTime0 = 800;
 unsigned int integrationTime1 = 50;
 
-unsigned int amplitude0 = 20;
-unsigned int amplitude1 = 20;
+unsigned int amplitude0 = 60;
+unsigned int amplitude1 = 60;
 
 int hdr = 2;
 
@@ -88,20 +86,24 @@ cv::Mat_<cv::Point3f> point3f_mat_(60, 160);
 
 std::string title = "People Counting";
 
-char const *LED_GREEN = "83";
-char const *LED_RED   = "84";
+char const *LED_GREEN = "32";
+char const *LED_RED   = "34";
 
-char const *RELAY_0 = "34";
-char const *RELAY_1 = "35";
-char const *RELAY_2 = "36";
-char const *RELAY_S = "37";
+char const *RELAY_0 = "74";
+char const *RELAY_1 = "76";
+char const *RELAY_2 = "78";
+char const *RELAY_S = "80";
 
 bool relay_high_effective = false;
 bool wakeUp = false;
+bool with_wing = false;
 
 bool gpio_available = false;
 
 std::string otg_ip_address = "10.42.0.1";
+
+pcl::PointCloud<pcl::PointXYZRGB>::Ptr point_cloud_test(new pcl::PointCloud<pcl::PointXYZRGB>);
+cv::Mat depth_test;
 
 MJPGStreamer* streamer;
 
@@ -189,12 +191,23 @@ bool has_ip_address(std::string ip)
     return false;
 }
 
-int detected_prev = -2;
+int persons_prev = -2;
 int is_awake = false;
 
 int ping_count = 0;
 bool led_red_on = false;
-int in = 0, out = 0;
+
+float curr_wing_position;
+
+float wing_init_angle;
+int wing_init_bars = 0;
+
+int trained_frames = 0;
+int sum_wing_init_bars = 0;
+float sum_init_angles = 0;
+
+int state = 0;
+
 void process(Camera* camera)
 {
 	ErrorNumber_e status;
@@ -202,14 +215,10 @@ void process(Camera* camera)
 	ToFImage tofImage(camera->getWidth(), camera->getHeight());
 	camera->setIntegrationTimeGrayscale(0);
 
-	std::chrono::steady_clock::time_point st_time0;
-	std::chrono::steady_clock::time_point en_time0;
-
 	std::chrono::steady_clock::time_point st_time;
 	std::chrono::steady_clock::time_point en_time;
 
 	double interval, frame_rate;
-	st_time0 = std::chrono::steady_clock::now();
 	st_time = std::chrono::steady_clock::now();
 	int data_frame_id = 0;
 
@@ -229,10 +238,26 @@ void process(Camera* camera)
 
 			if (strcmp(action, "train-detect") == 0 || strcmp(action, "train-view") == 0)
 			{
-				train(tofImage.data_3d_xyz_rgb, data_background);
+				if (with_wing)
+				{
+					int wings = 0;
+					float angle = 0;
+					train_background(&tofImage, data_background, wings, angle);
+					trained_frames ++;
+					sum_wing_init_bars += wings;
+					sum_init_angles += angle;
+					if (wings <= 2)
+					{
+						std::cout << "   Error, no wings found: " << data_frame_id << "%, switch back to no-wing mode ..." << std::endl;
+						with_wing = false;
+					}
+				} else {
+					train(tofImage.data_3d_xyz_rgb, data_background);
+				}
+
 				if (data_frame_id >= 5 && data_frame_id < 50 && data_frame_id % 5 == 0)
 				{
-					std::cout << "Training in progress: " << data_frame_id << "%, please wait ..." << std::endl;
+					std::cout << "Training in progress: " << (data_frame_id * 2) << "%, please wait ..." << std::endl;
 
 					if (gpio_available) gpio_high(LED_RED);
 				} else
@@ -243,12 +268,29 @@ void process(Camera* camera)
 				{
 					std::string fn = std::string(sd_card) + "/model.bin";
 					write(fn, data_background);
-					for (int i = 0; i < 9600; i ++)
-					{
-						if (floor_height < data_background[i]) floor_height = data_background[i];
-					}
-					floor_height -= 0.1; 
+					
+					//for (int i = 0; i < 9600; i ++)
+					//{
+					//	if (floor_height < data_background[i]) floor_height = data_background[i];
+					//}
+					//floor_height -= 0.1; 
+					floor_height = 2.0; 
 					std::cout << "\nFloor: " << floor_height << std::endl;
+
+					if (with_wing)
+					{
+						wing_init_bars = sum_wing_init_bars / trained_frames;
+						wing_init_angle = sum_init_angles / trained_frames;
+
+						std::cout << "Bars:  " << wing_init_bars << std::endl;
+						std::cout << "Angle: " << wing_init_angle << std::endl;
+
+						std::ofstream wings_file (std::string(sd_card) + "/wings.txt");
+						wings_file << wing_init_bars;
+						wings_file << "\n";
+						wings_file << wing_init_angle;
+						wings_file.close();
+					}
 
 					std::cout << "\nTraining completed, starting detect ..." << std::endl;
 
@@ -263,52 +305,25 @@ void process(Camera* camera)
 				}
 			}
 			else
-			{
-				pcl::PointCloud<pcl::PointXYZRGB>::Ptr point_cloud_ptr(new pcl::PointCloud<pcl::PointXYZRGB>);
+			{				
+				std::chrono::steady_clock::time_point st_time_t;
+				std::chrono::steady_clock::time_point en_time_t;
+				double interval_t;
 
-				pcl::PointXYZRGB* data_ptr = reinterpret_cast<pcl::PointXYZRGB*>(tofImage.data_3d_xyz_rgb);
-				std::vector<pcl::PointXYZRGB> pts(data_ptr, data_ptr + tofImage.n_points);
-				point_cloud_ptr->points.clear();
-				point_cloud_ptr->points.insert(point_cloud_ptr->points.end(), pts.begin(), pts.end());
-				point_cloud_ptr->resize(tofImage.n_points);
-				point_cloud_ptr->width = tofImage.n_points;
-				point_cloud_ptr->height = 1;
-				point_cloud_ptr->is_dense = false;
+				int detected = 0, tracked = 0, persons = 0;
+				bool presented = false;
+
+				st_time_t = std::chrono::steady_clock::now();
+
+				people_count(&tofImage, data_background, floor_height, with_wing, wing_init_bars, wing_init_angle, presented, curr_wing_position, tracked_objects, detected, tracked, persons, state);
+
+				en_time_t = std::chrono::steady_clock::now();				
+				interval_t = ((double) std::chrono::duration_cast<std::chrono::microseconds>(en_time_t - st_time_t).count()) / 1000000.0;
 				
-				Cloud cloud;
-				filterAndDownSample(point_cloud_ptr, cloud, data_background);
-
-				std::vector<SpatialObject> parts_validated;
-				int detected = detect(cloud, parts_validated);
-
-				pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_pre_clustered(new pcl::PointCloud<pcl::PointXYZRGB>);
-				pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_clustered(new pcl::PointCloud<pcl::PointXYZRGB>);
-				pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_detected(new pcl::PointCloud<pcl::PointXYZRGB>);
-				pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_centers(new pcl::PointCloud<pcl::PointXYZRGB>);
-				pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_debug(new pcl::PointCloud<pcl::PointXYZRGB>);
-
-				detected = track(parts_validated, out, in, cloud_clustered, cloud_detected, cloud_centers, cloud_debug, tracked_objects, floor_height);
-				if (tracked_objects.size() == 1)
-				{
-					if (tracked_objects[0].is_at_edge) detected = 0;
-				} else if (tracked_objects.size() > 1)
-				{
-					bool one_in_center = false;
-					for (int i = 0; i < tracked_objects.size(); i ++)
-					{
-						// at least one is in center area
-						if (! tracked_objects[i].is_at_edge) {
-							one_in_center = true;
-							break;
-						}
-					}
-					if (! one_in_center)
-					{
-						detected = 0;
-					}
-				}
-
-				if (detected > 0 && ping_count%2 == 0)
+				//if (detected > 0 || tracked > 0 || persons > 0) 
+				//	std::cout << "detected: " << detected << ", tracked: " << tracked << ", persons: " << persons << ", count interval_t: " << interval_t << std::endl;
+				
+				if (persons > 0 && ping_count%2 == 0)
 				{
 					ping_count = 0;
 
@@ -321,7 +336,7 @@ void process(Camera* camera)
 						if (gpio_available) gpio_low(LED_RED);
 						led_red_on = false;
 					}
-				} else if (detected == 0 && ping_count%50 == 0)
+				} else if (persons == 0 && ping_count%50 == 0)
 				{
 					ping_count = 0;
 					if (gpio_available) gpio_high(LED_RED);
@@ -333,26 +348,26 @@ void process(Camera* camera)
 				}
 				ping_count ++;
 
-				int saturated_points = 0;
-				for (int i = 0; i < tofImage.n_points; i ++)
-				{
-						if (tofImage.saturated_mask[i] > 0)
-						{
-								saturated_points ++;
-						}
-				}
+				//int saturated_points = 0;
+				//for (int i = 0; i < tofImage.n_points; i ++)
+				//{
+				//		if (tofImage.saturated_mask[i] > 0)
+				//		{
+				//				saturated_points ++;
+				//		}
+				//}
 
-				if (saturated_points > 500)
-				{
-						detected = -1;
-				}
+				//if (saturated_points > 500)
+				//{
+				//		persons = -1;
+				//}
 
 				if (strcmp(comm_protocal, "relay") == 0)
 				{
 					if (wakeUp)
 					{
 						//wake up check
-						if (cloud.cloud->points.size() > 30)
+						if (presented)
 						{
 							if (! is_awake)
 							{
@@ -370,49 +385,49 @@ void process(Camera* camera)
 							}
 						}
 					}
-					if (detected_prev != detected)
+					if (persons_prev != persons)
 					{
-						if (detected_prev == 0) {
+						if (persons_prev == 0) {
 								if (! wakeUp)
 								{
 									if (gpio_available) relay_OFF(RELAY_0);
 									std::cout << "              relay -> 0 OFF" << std::endl;
 								}
 						}
-						if (detected_prev == 1) {
+						if (persons_prev == 1) {
 								if (gpio_available) relay_OFF(RELAY_1);
 								std::cout << "              relay -> 1 OFF" << std::endl;
 						}
-						if (detected_prev >= 2) {
+						if (persons_prev >= 2) {
 								if (gpio_available) relay_OFF(RELAY_2);
 								std::cout << "              relay -> 2 OFF" << std::endl;
 						}
-						if (detected_prev == -1) {
+						if (persons_prev == -1) {
 								if (gpio_available) relay_OFF(RELAY_S);
 								std::cout << "              relay -> S OFF" << std::endl;
 						}
 
-						if (detected == 0) {
+						if (persons == 0) {
 							if (! wakeUp)
 							{
 								if (gpio_available) relay_ON(RELAY_0);
 								std::cout << "              relay -> 0 ON" << std::endl;
 							}
 						}
-						if (detected == 1) {
+						if (persons == 1) {
 							if (gpio_available) relay_ON(RELAY_1);
 							std::cout << "              relay -> 1 ON" << std::endl;
 						}
-						if (detected >= 2) {
+						if (persons >= 2) {
 							if (gpio_available) relay_ON(RELAY_2);
 							std::cout << "              relay -> 2 ON" << std::endl;
 						}
-						if (detected == -1) {
+						if (persons == -1) {
 							if (gpio_available) relay_ON(RELAY_S);
 							std::cout << "              relay -> S ON" << std::endl;
 						}
 
-						detected_prev = detected;
+						persons_prev = persons;
 					}
 				}
 
@@ -453,22 +468,22 @@ void process(Camera* camera)
 						cv::FONT_HERSHEY_DUPLEX, 1.0, cv::Scalar(255,255,255), 1, cv::LINE_AA
 					);
 
-					if (detected == 0)
+					if (persons == 0)
 					{
 						cv::putText(
-							depth_bgr_display, "Persons Detected: " + std::to_string(detected), cv::Point(20, 960),
+							depth_bgr_display, "Persons: " + std::to_string(persons), cv::Point(20, 960),
 							cv::FONT_HERSHEY_DUPLEX, 1.0, cv::Scalar(255,255,255), 1, cv::LINE_AA
 						);
-					} else if (detected == 1)
+					} else if (persons == 1)
 					{
 						cv::putText(
-							depth_bgr_display, "Persons Detected: " + std::to_string(detected), cv::Point(20, 960),
+							depth_bgr_display, "Persons: " + std::to_string(persons), cv::Point(20, 960),
 							cv::FONT_HERSHEY_DUPLEX, 1.0, cv::Scalar(0,255,0), 1, cv::LINE_AA
 						);
-					} else if (detected == 2 || detected == -1)
+					} else if (persons == 2 || persons == -1)
 					{
 						cv::putText(
-							depth_bgr_display, "Persons Detected: " + std::to_string(detected), cv::Point(20, 960),
+							depth_bgr_display, "Persons: " + std::to_string(persons), cv::Point(20, 960),
 							cv::FONT_HERSHEY_DUPLEX, 1.0, cv::Scalar(0,0,255), 1, cv::LINE_AA
 						);
 					}
@@ -487,8 +502,8 @@ void process(Camera* camera)
 
 	exit_requested = true;
 
-	en_time0 = std::chrono::steady_clock::now();
-	interval = ((double) std::chrono::duration_cast<std::chrono::microseconds>(en_time0 - st_time0).count()) / 1000000.0;
+	en_time = std::chrono::steady_clock::now();
+	interval = ((double) std::chrono::duration_cast<std::chrono::microseconds>(en_time - st_time).count()) / 1000000.0;
 	frame_rate = ((double) data_frame_id) / interval;
 	std::cout << "Frames: " << data_frame_id << " time spent: " << interval << " frame rate: " << frame_rate << std::endl;
 }
@@ -589,7 +604,7 @@ void start()
 		std::cerr << "Set MinimalAmplitude 5 failed." << std::endl;
 	}
 
-	camera->setRange(50, 5500);
+	camera->setRange(0, 7500);
 
 	HDR_e hdr_mode = HDR_OFF;
 	if (hdr == 2)
@@ -626,6 +641,19 @@ void exit_handler(int s){
 	signal(SIGINT, exit_handler);
 }
 
+void read_background(std::string background_file_path)
+{
+	read(background_file_path, data_background);
+	for (int i = 0; i < 9600; i ++)
+	{
+		if (floor_height < data_background[i]) floor_height = data_background[i];
+	}
+	floor_height = 2.0;
+	std::cout << "floor_height: " << floor_height << std::endl;
+	std::cout << std::endl;
+}
+
+std::string test_data_path = "/home/vsemi/dev/anti_tailgating/data";
 int main(int argc, char** argv) {
 
 	struct sigaction sigIntHandler;
@@ -640,6 +668,7 @@ int main(int argc, char** argv) {
 	{
 		gpio_available = true;
 		otg_ip_address = "10.42.0.1";
+		test_data_path = "/home/cat/anti-tailgating/data";
 	} else
 	{
 		sd_card = (char*) "/home/vsemi/data/peoplecount";
@@ -672,6 +701,22 @@ int main(int argc, char** argv) {
 	if (! relay_high_effective)
 	{
 		std::cout << "                 relay low effective" << std::endl;
+	}
+
+	if (argc >= 3 && strcmp(argv[2], "wing") == 0)
+	{
+		with_wing = true;
+		std::cout << "                 with wing" << std::endl;
+	}
+	if (argc >= 4 && strcmp(argv[3], "wing") == 0)
+	{
+		with_wing = true;
+		std::cout << "                 with wing" << std::endl;
+	}
+	if (argc >= 5 && strcmp(argv[4], "wing") == 0)
+	{
+		with_wing = true;
+		std::cout << "                 with wing" << std::endl;
 	}
 
 	bool otg_connected = has_ip_address(otg_ip_address);
@@ -763,7 +808,7 @@ int main(int argc, char** argv) {
 	std::cout << "--------------------------------------" << std::endl;
 	std::cout << "\n" << std::endl;
 
-	if (otg_connected)
+	if (otg_connected && strcmp(action, "test") != 0)
 	{
 		action = (char*)"train-view";
 	}
@@ -784,6 +829,30 @@ int main(int argc, char** argv) {
 		integrationTime0 = 400;
 
 		std::cout << "\nStarting view mode, point browser to http://10.42.0.1:8800 to view ToF distance iamge.\n" << std::endl;
+	}
+
+	if (strcmp(action, "test") == 0)
+	{
+		read_background(test_data_path + "/wing/model.bin");
+		pcl::io::loadPCDFile<pcl::PointXYZRGB> (test_data_path + "/wing/2.pcd", *point_cloud_test);
+		depth_test = cv::imread(test_data_path + "/wing/2.jpg");
+
+		if (with_wing)
+		{
+			std::string wings_fn = test_data_path + "/wing/wings.txt";
+			std::ifstream infile(wings_fn);
+			std::string line;
+
+			std::getline(infile, line);
+			wing_init_bars = std::stoi(line);
+
+			std::getline(infile, line);
+			wing_init_angle = std::stoi(line);
+
+			std::cout << "Bars:  " << wing_init_bars << std::endl;
+			std::cout << "Angle: " << wing_init_angle << std::endl;
+			std::cout << std::endl;
+		}
 	}
 
 	start();
