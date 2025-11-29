@@ -73,10 +73,12 @@ float floor_height = 0.0;
 volatile bool exit_requested = false;
 
 unsigned int integrationTime0 = 800;
-unsigned int integrationTime1 = 50;
+unsigned int integrationTime1 = 30;
+unsigned int integrationTime2 = 0;
 
-unsigned int amplitude0 = 60;
-unsigned int amplitude1 = 60;
+unsigned int amplitude0 = 40;
+unsigned int amplitude1 = 40;
+unsigned int amplitude2 = 40;
 
 int hdr = 2;
 
@@ -86,13 +88,13 @@ cv::Mat_<cv::Point3f> point3f_mat_(60, 160);
 
 std::string title = "People Counting";
 
-char const *LED_GREEN = "32";
-char const *LED_RED   = "34";
+char const *LED_GREEN = "73";
+char const *LED_RED   = "74";
 
-char const *RELAY_0 = "74";
-char const *RELAY_1 = "76";
-char const *RELAY_2 = "78";
-char const *RELAY_S = "80";
+char const *RELAY_0 = "36";
+char const *RELAY_1 = "40";
+char const *RELAY_2 = "41";
+char const *RELAY_S = "42";
 
 bool relay_high_effective = false;
 bool wakeUp = false;
@@ -114,6 +116,73 @@ inline bool file_exists (const std::string& name) {
 	}
 
 	return false;
+}
+
+static bool initGPIO(char const *gpio_number) {
+    std::ofstream export_file("/sys/class/gpio/export");
+    if (export_file.is_open()) {
+        export_file << gpio_number;
+        export_file.close();
+    }
+    
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    
+    std::string dir_path = std::string("/sys/class/gpio/gpio") + gpio_number + "/direction";
+    std::ofstream dir_file(dir_path);
+    if (dir_file.is_open()) {
+        dir_file << "out";
+        dir_file.close();
+    }
+    
+    std::string pull_path = std::string("/sys/class/gpio/gpio") + gpio_number + "/pull";
+    std::ofstream pull_file(pull_path);
+    if (pull_file.is_open()) {
+        pull_file << "disable";
+        pull_file.close();
+        std::cout << "Fixed pull-up/down for GPIO " << gpio_number << std::endl;
+    }
+    
+    return true;
+}
+
+static void deinitGPIO(char const *gpio_number) {
+    std::string value_path = std::string("/sys/class/gpio/gpio") + gpio_number + "/value";
+    std::ofstream value_file(value_path);
+    if (value_file.is_open()) {
+        value_file << "0";  // 设置为低电平，确保安全
+        value_file.close();
+    }
+    
+    std::ofstream unexport_file("/sys/class/gpio/unexport");
+    if (unexport_file.is_open()) {
+        unexport_file << gpio_number;
+        unexport_file.close();
+        std::cout << "Unexported GPIO " << gpio_number << std::endl;
+    }
+}
+
+void led_ON(char const *gpio_pin)
+{
+	gpio_high(gpio_pin);
+}
+
+void led_OFF(char const *gpio_pin)
+{
+	gpio_low(gpio_pin);
+}
+
+bool led_red_on = false;
+
+void red_led_ON()
+{
+	led_ON(LED_RED);
+	led_red_on = true;
+}
+
+void red_led_OFF()
+{
+	led_OFF(LED_RED);
+	led_red_on = false;
 }
 
 void relay_ON(char const *gpio_pin)
@@ -192,10 +261,10 @@ bool has_ip_address(std::string ip)
 }
 
 int persons_prev = -2;
+int saturated_count = 0;
 int is_awake = false;
 
 int ping_count = 0;
-bool led_red_on = false;
 
 float curr_wing_position;
 
@@ -213,7 +282,6 @@ void process(Camera* camera)
 	ErrorNumber_e status;
 
 	ToFImage tofImage(camera->getWidth(), camera->getHeight());
-	camera->setIntegrationTimeGrayscale(0);
 
 	std::chrono::steady_clock::time_point st_time;
 	std::chrono::steady_clock::time_point en_time;
@@ -259,10 +327,10 @@ void process(Camera* camera)
 				{
 					std::cout << "Training in progress: " << (data_frame_id * 2) << "%, please wait ..." << std::endl;
 
-					if (gpio_available) gpio_high(LED_RED);
+					if (gpio_available) red_led_ON();
 				} else
 				{
-					if (gpio_available) gpio_low(LED_RED);
+					if (gpio_available) red_led_OFF();
 				}
 				if (data_frame_id > 50)
 				{
@@ -301,7 +369,7 @@ void process(Camera* camera)
 					{
 						action = (char*)"view";
 					}
-					if (gpio_available) gpio_low(LED_RED);
+					if (gpio_available) red_led_OFF();
 				}
 			}
 			else
@@ -329,38 +397,29 @@ void process(Camera* camera)
 
 					if (! led_red_on)
 					{
-						if (gpio_available) gpio_high(LED_RED);
-						led_red_on = true;
+						if (gpio_available) red_led_ON();
 					} else
 					{
-						if (gpio_available) gpio_low(LED_RED);
-						led_red_on = false;
+						if (gpio_available) red_led_OFF();
 					}
 				} else if (persons == 0 && ping_count%50 == 0)
 				{
 					ping_count = 0;
-					if (gpio_available) gpio_high(LED_RED);
-					led_red_on = true;
+					if (gpio_available) red_led_ON();
 				} else
 				{
-					if (gpio_available) gpio_low(LED_RED);
-					led_red_on = false;
+					if (gpio_available) red_led_OFF();
 				}
 				ping_count ++;
 
-				//int saturated_points = 0;
-				//for (int i = 0; i < tofImage.n_points; i ++)
-				//{
-				//		if (tofImage.saturated_mask[i] > 0)
-				//		{
-				//				saturated_points ++;
-				//		}
-				//}
-
-				//if (saturated_points > 500)
-				//{
-				//		persons = -1;
-				//}
+				if (persons == -1) {
+					saturated_count ++;
+					if (saturated_count < 15) {
+						persons = persons_prev;
+					}
+				} else {
+					saturated_count = 0;
+				}
 
 				if (strcmp(comm_protocal, "relay") == 0)
 				{
@@ -552,7 +611,7 @@ void start()
 	{
 		std::cerr << "Set IntegrationTime3d 1 failed." << std::endl;
 	}
-	status = camera->setIntegrationTime3d(2, 0);
+	status = camera->setIntegrationTime3d(2, integrationTime2);
 	if (status != ERROR_NUMMBER_NO_ERROR)
 	{
 		std::cerr << "Set IntegrationTime3d 2 failed." << std::endl;
@@ -573,6 +632,12 @@ void start()
 		std::cerr << "Set IntegrationTime3d 5 failed." << std::endl;
 	}
 
+	status = camera->setIntegrationTimeGrayscale(15000);
+	if (status != ERROR_NUMMBER_NO_ERROR)
+	{
+		std::cerr << "Set Integration Time Grayscale failed." << std::endl;
+	}
+
 	status = camera->setMinimalAmplitude(0, amplitude0);
 	if (status != ERROR_NUMMBER_NO_ERROR)
 	{
@@ -583,7 +648,7 @@ void start()
 	{
 		std::cerr << "Set MinimalAmplitude 1 failed." << std::endl;
 	}
-	status = camera->setMinimalAmplitude(2, 0);
+	status = camera->setMinimalAmplitude(2, amplitude2);
 	if (status != ERROR_NUMMBER_NO_ERROR)
 	{
 		std::cerr << "Set MinimalAmplitude 2 failed." << std::endl;
@@ -726,16 +791,16 @@ int main(int argc, char** argv) {
 
 	if (gpio_available)
 	{
-		gpio_init(LED_RED);
-		gpio_init(LED_GREEN);
+		initGPIO(LED_RED);
+		initGPIO(LED_GREEN);
 
-		gpio_init(RELAY_0);
-		gpio_init(RELAY_1);
-		gpio_init(RELAY_2);
-		gpio_init(RELAY_S);
+		initGPIO(RELAY_0);
+		initGPIO(RELAY_1);
+		initGPIO(RELAY_2);
+		initGPIO(RELAY_S);
 
-		gpio_high(LED_RED);
-		gpio_high(LED_GREEN);
+		red_led_ON();
+		led_ON(LED_GREEN);
 
 		relay_OFF(RELAY_0);
 		relay_OFF(RELAY_1);
@@ -755,7 +820,7 @@ int main(int argc, char** argv) {
 	
 	if (gpio_available)
 	{
-		gpio_low(LED_RED);
+		red_led_OFF();
 	}
 	usleep(1000000);
 
@@ -776,12 +841,12 @@ int main(int argc, char** argv) {
 
 			if (gpio_available)
 			{
-				gpio_high(LED_RED);
+				red_led_ON();
 			}
 			usleep(1000000);
 			if (gpio_available)
 			{
-				gpio_low(LED_RED);
+				red_led_OFF();
 			}
 			attempts ++;
 			if (attempts >= 15) attempts = 0;
@@ -789,7 +854,7 @@ int main(int argc, char** argv) {
 		{
 			if (gpio_available)
 			{
-				gpio_high(LED_RED);
+				red_led_ON();
 			}
 			usleep(1000000);
 			sensor_uid = camera->getID();
@@ -799,7 +864,7 @@ int main(int argc, char** argv) {
 	
 	if (gpio_available)
 	{
-		gpio_low(LED_RED);
+		red_led_OFF();
 	}
 
 	std::cout << "\n" << std::endl;
@@ -808,7 +873,7 @@ int main(int argc, char** argv) {
 	std::cout << "--------------------------------------" << std::endl;
 	std::cout << "\n" << std::endl;
 
-	if (otg_connected && strcmp(action, "test") != 0)
+	if (otg_connected || strcmp(action, "test") != 0)
 	{
 		action = (char*)"train-view";
 	}
@@ -823,10 +888,8 @@ int main(int argc, char** argv) {
 
 		if (gpio_available)
 		{
-			gpio_high(LED_RED);
+			red_led_ON();
 		}
-
-		integrationTime0 = 400;
 
 		std::cout << "\nStarting view mode, point browser to http://10.42.0.1:8800 to view ToF distance iamge.\n" << std::endl;
 	}
@@ -871,13 +934,13 @@ int main(int argc, char** argv) {
 
     if (gpio_available)
 	{
-		gpio_deinit(LED_RED);
-        gpio_deinit(LED_GREEN);
+		deinitGPIO(LED_RED);
+        deinitGPIO(LED_GREEN);
 
-		gpio_deinit(RELAY_0);
-		gpio_deinit(RELAY_1);
-		gpio_deinit(RELAY_2);
-		gpio_deinit(RELAY_S);
+		deinitGPIO(RELAY_0);
+		deinitGPIO(RELAY_1);
+		deinitGPIO(RELAY_2);
+		deinitGPIO(RELAY_S);
 	}
 
 	return 0;
