@@ -30,7 +30,7 @@ void people_count(
 	float floor_height,
 	bool with_wing,
 	int wing_init_bars,
-	int wing_init_angle,
+	float wing_init_angle,
 	bool &presented,
 	float &wing_position,
 	std::vector<SpatialObject> &tracked_objects,

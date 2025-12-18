@@ -68,7 +68,7 @@ public:
 	float max_dy;
 
 	int lost_period;
-	bool from_split;
+	float confidence;
 	bool validated;
 	float distance;
 	pcl::PointXYZRGB peak;

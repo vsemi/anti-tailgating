@@ -59,6 +59,31 @@
 #include "MJPGStreamer.h"
 #include "http_service.h"
 
+void detect_and_track(
+	pcl::PointCloud<pcl::PointXYZRGB>::Ptr point_cloud_ptr,
+	cv::Mat depth_image,
+	float* background,
+	float floor_height,
+	bool wing,
+	int wing_init_bars,
+	float wing_init_angle,
+	bool &presented,
+	float &angle,
+	std::vector<SpatialObject> &tracked_objects,
+	int &detected, int &tracked, int &persons,
+	pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_bar_removed,
+	pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_filtered,
+	pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_clustered,
+	pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_detected,
+	pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_centers,
+	cv::Mat &grayImage, 
+	cv::Mat &edgeImage,
+	cv::Mat &linesImage,
+	cv::Mat &maskImage,
+	std::vector<cv::Vec4i> &_bars,
+	int &state
+);
+
 u_int32_t sensor_uid;
 
 const char *sd_card = "/home/cat/data";
@@ -72,13 +97,15 @@ float floor_height = 0.0;
 
 volatile bool exit_requested = false;
 
-unsigned int integrationTime0 = 800;
-unsigned int integrationTime1 = 30;
+unsigned int integrationTime0 = 1000;
+//unsigned int integrationTime1 = 200;
+//unsigned int integrationTime2 = 50;
+unsigned int integrationTime1 = 50;
 unsigned int integrationTime2 = 0;
 
-unsigned int amplitude0 = 40;
-unsigned int amplitude1 = 40;
-unsigned int amplitude2 = 40;
+unsigned int amplitude0 = 20;
+unsigned int amplitude1 = 20;
+unsigned int amplitude2 = 20;
 
 int hdr = 2;
 
@@ -108,8 +135,6 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr point_cloud_test(new pcl::PointCloud<pcl:
 cv::Mat depth_test;
 
 MJPGStreamer* streamer;
-
-bool record_data = false;
 
 inline bool file_exists (const std::string& name) {
 	if (name != "") {
@@ -263,7 +288,6 @@ bool has_ip_address(std::string ip)
 }
 
 int persons_prev = -2;
-int saturated_count = 0;
 int is_awake = false;
 
 int ping_count = 0;
@@ -294,6 +318,8 @@ void process(Camera* camera)
 
 	std::vector<SpatialObject> tracked_objects;
 
+	int entry_state = 0, prev_state = 0;
+
 	while (! exit_requested)
 	{
 		try
@@ -304,32 +330,6 @@ void process(Camera* camera)
 				std::cerr << "Error: " << status << std::endl;
 				usleep(500000);
 				continue;
-			}
-
-			if (record_data) {
-					pcl::PointCloud<pcl::PointXYZRGB>::Ptr point_cloud_ptr(new pcl::PointCloud<pcl::PointXYZRGB>);
-					pcl::PointXYZRGB* data_ptr = reinterpret_cast<pcl::PointXYZRGB*>(tofImage.data_3d_xyz_rgb);
-					std::vector<pcl::PointXYZRGB> pts(data_ptr, data_ptr + tofImage.n_points);
-					point_cloud_ptr->points.clear();
-					point_cloud_ptr->points.insert(point_cloud_ptr->points.end(), pts.begin(), pts.end());
-					point_cloud_ptr->resize(tofImage.n_points);
-					point_cloud_ptr->width = tofImage.n_points;
-					point_cloud_ptr->height = 1;
-					point_cloud_ptr->is_dense = false;
-
-					cv::Mat depth_image(tofImage.height, tofImage.width, CV_8UC3, tofImage.data_2d_bgr);
-
-					std::ostringstream ostr;
-					ostr << std::setfill('0') << std::setw(5) << (data_frame_id < 0 ? -data_frame_id : data_frame_id);
-
-					std::string s_sd_card = sd_card;
-					std::string pcd_fn = s_sd_card + "/pcd/" + ostr.str() + ".pcd";
-					std::string img_fn = s_sd_card + "/images/" + ostr.str() + ".jpg";
-					//std::cout << "pcd_fn: " << pcd_fn << std::endl;
-					//std::cout << "img_fn: " << img_fn << std::endl;
-					pcl::io::savePCDFileASCII(pcd_fn, *point_cloud_ptr);
-					cv::imwrite(img_fn, depth_image);
-					//std::cout << "saved: " << ostr.str() << std::endl;
 			}
 
 			if (strcmp(action, "train-detect") == 0 || strcmp(action, "train-view") == 0)
@@ -344,7 +344,7 @@ void process(Camera* camera)
 					sum_init_angles += angle;
 					if (wings <= 2)
 					{
-						std::cout << "\nError, no door wings found, switch back to non-door-wings mode ...\n" << std::endl;
+						std::cout << "   Error, no wings found: " << data_frame_id << "%, switch back to no-wing mode ..." << std::endl;
 						with_wing = false;
 					}
 				} else {
@@ -411,7 +411,49 @@ void process(Camera* camera)
 
 				st_time_t = std::chrono::steady_clock::now();
 
-				people_count(&tofImage, data_background, floor_height, with_wing, wing_init_bars, wing_init_angle, presented, curr_wing_position, tracked_objects, detected, tracked, persons, state);
+
+				pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_raw(new pcl::PointCloud<pcl::PointXYZRGB>);
+				
+				pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_bar_removed(new pcl::PointCloud<pcl::PointXYZRGB>);
+				pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_filtered(new pcl::PointCloud<pcl::PointXYZRGB>);
+				pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_clustered(new pcl::PointCloud<pcl::PointXYZRGB>);
+				pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_detected(new pcl::PointCloud<pcl::PointXYZRGB>);
+				pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_centers(new pcl::PointCloud<pcl::PointXYZRGB>);
+
+				cv::Mat depth_image;
+
+				cv::Mat grayImage, edgeImage;
+				cv::Mat linesImage(60, 160, CV_8UC1, cv::Scalar(0));
+				cv::Mat maskImage(60, 160, CV_8UC1, cv::Scalar(0));
+				
+				std::vector<cv::Vec4i> _bars;
+
+				/////////////
+				bool wing = true;
+				//bool presented = false;
+				float angle = 0;
+				//int persons = 0;
+
+				if (strcmp(action, "view") == 0)
+				{
+					detect_and_track(
+						cloud_raw, depth_image, 
+						data_background, floor_height, 
+						wing, wing_init_bars, wing_init_angle,
+						presented, angle, 
+						tracked_objects, detected, tracked, persons, 
+						cloud_bar_removed, cloud_filtered, cloud_clustered, cloud_detected, cloud_centers, 
+						grayImage, edgeImage, linesImage, maskImage,
+						_bars,
+						entry_state
+					);
+
+					prev_state = entry_state;
+
+				} else {
+					people_count(&tofImage, data_background, floor_height, with_wing, wing_init_bars, wing_init_angle, presented, curr_wing_position, tracked_objects, detected, tracked, persons, state);
+				}
+				
 
 				en_time_t = std::chrono::steady_clock::now();				
 				interval_t = ((double) std::chrono::duration_cast<std::chrono::microseconds>(en_time_t - st_time_t).count()) / 1000000.0;
@@ -440,14 +482,19 @@ void process(Camera* camera)
 				}
 				ping_count ++;
 
-				if (persons == -1) {
-					saturated_count ++;
-					if (saturated_count < 15) {
-						persons = persons_prev;
-					}
-				} else {
-					saturated_count = 0;
-				}
+				//int saturated_points = 0;
+				//for (int i = 0; i < tofImage.n_points; i ++)
+				//{
+				//		if (tofImage.saturated_mask[i] > 0)
+				//		{
+				//				saturated_points ++;
+				//		}
+				//}
+
+				//if (saturated_points > 500)
+				//{
+				//		persons = -1;
+				//}
 
 				if (strcmp(comm_protocal, "relay") == 0)
 				{
@@ -522,6 +569,33 @@ void process(Camera* camera)
 				{
 					depth_bgr = cv::Mat(tofImage.height, tofImage.width, CV_8UC3, tofImage.data_2d_bgr);
 
+					if (with_wing) {
+						// linesImage
+						for (int r = 0; r < 60; r ++)
+						{
+							for (int c = 0; c < 160; c ++)
+							{
+								if (linesImage.at<uchar>(r, c) == 255) {
+									cv::Vec3b& p = depth_bgr.at<cv::Vec3b>(r, c);
+									//float alpha = 0.5;
+									p[0] = 255;//static_cast<uchar>(p[0] * alpha + 255 * alpha);
+									p[1] = 255;//static_cast<uchar>(p[1] * alpha + 255 * alpha);
+									p[2] = 255;//static_cast<uchar>(p[2] * alpha + 255 * alpha);
+								}
+							}
+						}
+					}
+
+					for (int i = 0; i < tracked_objects.size(); i ++)
+					{
+						if (tracked_objects[i].age_tracked > 0)
+						{
+							int x2d = (tracked_objects[i].cx * 181.296 / tracked_objects[i].cz) + 80;
+							int y2d = (tracked_objects[i].cy * 181.079 / tracked_objects[i].cz) + 30;
+							cv::circle(depth_bgr, cv::Point(x2d, y2d), 5, cv::Scalar(0, 0, 255), 2);
+						}
+					}
+
 					cv::Mat depth_bgr_enlarge;
 					if (hdr == 1)
 					{
@@ -543,11 +617,7 @@ void process(Camera* camera)
 
 					if (with_wing) {
 						cv::putText(
-							depth_bgr_display, "Make sure the door wings can be seen by ToF camera and appear in the bottom-left corners.", cv::Point(20, 840),
-							cv::FONT_HERSHEY_DUPLEX, 1.2, cv::Scalar(255,255,255), 1, cv::LINE_AA
-						);
-						cv::putText(
-							depth_bgr_display, "Door wings should not be seen at the bottom-right corners when door wings at init position.", cv::Point(20, 960),
+							depth_bgr_display, "Make sure part of the door wings can be seen by ToF camera.", cv::Point(20, 840),
 							cv::FONT_HERSHEY_DUPLEX, 1.2, cv::Scalar(255,255,255), 1, cv::LINE_AA
 						);
 					} else {
@@ -824,7 +894,6 @@ int main(int argc, char** argv) {
 	}
 
 	bool otg_connected = has_ip_address(otg_ip_address);
-	//std::cout << "otg_connected:         " << otg_connected << std::endl;
 	if (otg_connected) std::cout << "                 otg" << otg_connected << std::endl;
 
 	usleep(2000000);
@@ -913,19 +982,13 @@ int main(int argc, char** argv) {
 	std::cout << "--------------------------------------" << std::endl;
 	std::cout << "\n" << std::endl;
 
-	std::cout << "Action:         " << action << std::endl;
-	std::cout << "otg_connected:         " << otg_connected << std::endl;
-
-	if (otg_connected || strcmp(action, "test") == 0)
+	if (otg_connected || strcmp(action, "test") != 0)
 	{
 		action = (char*)"train-view";
 	}
 
-	std::cout << "Action:         " << action << std::endl;
-
 	if (strcmp(action, "train-view") == 0)
 	{
-		std::cout << "How reach here with action:         " << action << std::endl;
 		std::thread th_http(&start_http_server);
 		th_http.detach();
 
